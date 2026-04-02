@@ -83,6 +83,7 @@ function confirmBackToLevelSelection() {
     backToLevelSelection();
 }
 
+// --- 選擇課題與難度設定 ---
 function selectTopic(topic) {
     currentTopic = topic;
     document.getElementById('topicScreen').classList.add('hidden');
@@ -99,19 +100,19 @@ function selectTopic(topic) {
     // 隱藏所有按鈕
     [btnL1, btnL2, btnL3, btnL2A, btnL2B, btnL3A, btnL3B].forEach(b => b.classList.add('hidden'));
 
-    // 設定年級標籤的 HTML 字串，以避免 Tailwind JIT 阻擋動態 class
+    // 設定年級標籤的 HTML 字串
     const badges = {
         'L1_S1': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-bold">S1</span></div>',
         'L1_S2': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-bold">S2</span></div>',
         'L1_S1DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-bold">S1、DSE</span></div>',
         'L1_S2DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-bold">S2、DSE</span></div>',
-        
+        'L1_S3DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-bold">S3、DSE</span></div>',
         'L2_S1DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S1、DSE</span></div>',
         'L2_S2': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S2</span></div>',
         'L2_S2DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S2、DSE</span></div>',
         'L2_S3': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S3</span></div>',
         'L2_S4': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S4</span></div>',
-        
+        'L2_S3DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-md font-bold">S3、DSE</span></div>',
         'L3_S1DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-bold">S1、DSE</span></div>',
         'L3_S2DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-bold">S2、DSE</span></div>',
         'L3_S3DSE': '<div class="mt-1"><span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-bold">S3、DSE</span></div>'
@@ -200,44 +201,68 @@ function selectTopic(topic) {
         btnL2.classList.remove('hidden');
         btnL2.querySelector('.font-bold').innerHTML = '⭐⭐ 程度 2' + badges['L2_S4'];
         document.getElementById('descL2').innerHTML = '分母為一元二次<br>需先因式分解再通分母。';
+        
+    } else if (topic === 'binary') {
+        currentTopicName = '二進制';
+        document.getElementById('levelTitle').textContent = '二進制 - 請選擇難度';
+        
+        btnL1.classList.remove('hidden');
+        btnL1.querySelector('.font-bold').innerHTML = '⭐ 程度 1' + badges['L1_S3DSE'];
+        document.getElementById('descL1').innerHTML = '二進制轉十進制<br>只有加法。';
+        
+        btnL2.classList.remove('hidden');
+        btnL2.querySelector('.font-bold').innerHTML = '⭐⭐ 程度 2' + badges['L2_S3DSE'];
+        document.getElementById('descL2').innerHTML = '十進制轉二進制<br>只有加法。';
+        
+        btnL3.classList.remove('hidden');
+        btnL3.querySelector('.font-bold').innerHTML = '⭐⭐⭐ 程度 3' + badges['L3_S3DSE'];
+        document.getElementById('descL3').innerHTML = '綜合轉換<br>包含加法與減法。';
     }
 }
 
+// --- 開始遊戲與題目載入 ---
 function startGame(levelPref) {
-    currentLevelPref = levelPref;
-    
-    // 隱藏共用的題目指示，改為在每個生成器中自定義更美觀的題目排版
-    document.getElementById('questionInstruction').classList.add('hidden');
-    
-    // 呼叫對應課題的題庫生成函數 (需確保其他 topics js 檔案已載入)
-    if (currentTopic === 'indices') {
-        questionBank = generateIndicesQuestions(totalQuestionsConfig, currentLevelPref); 
-    } else if (currentTopic === 'factorization') {
-        questionBank = generateFactorizationQuestions(totalQuestionsConfig, currentLevelPref); 
-    } else if (currentTopic === 'rounding') {
-        questionBank = generateRoundingQuestions(totalQuestionsConfig, currentLevelPref);
-    } else if (currentTopic === 'identities') {
-        questionBank = generateIdentitiesQuestions(totalQuestionsConfig, currentLevelPref);
-    } else if (currentTopic === 'fractions') {
-        questionBank = generateFractionsQuestions(totalQuestionsConfig, currentLevelPref);
+    try {
+        currentLevelPref = levelPref;
+        
+        // 隱藏共用的題目指示，改為在每個生成器中自定義更美觀的題目排版
+        document.getElementById('questionInstruction').classList.add('hidden');
+        
+        // 呼叫對應課題的題庫生成函數 (需確保各課題檔案已正確引入)
+        if (currentTopic === 'indices') {
+            questionBank = generateIndicesQuestions(totalQuestionsConfig, currentLevelPref); 
+        } else if (currentTopic === 'factorization') {
+            questionBank = generateFactorizationQuestions(totalQuestionsConfig, currentLevelPref); 
+        } else if (currentTopic === 'rounding') {
+            questionBank = generateRoundingQuestions(totalQuestionsConfig, currentLevelPref);
+        } else if (currentTopic === 'identities') {
+            questionBank = generateIdentitiesQuestions(totalQuestionsConfig, currentLevelPref);
+        } else if (currentTopic === 'fractions') {
+            questionBank = generateFractionsQuestions(totalQuestionsConfig, currentLevelPref);
+        } else if (currentTopic === 'binary') {
+            questionBank = generateBinaryQuestions(totalQuestionsConfig, currentLevelPref);
+        }
+        
+        currentQuestionIndex = 0;
+        score = 0;
+        updateScoreDisplay();
+        
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('endScreen').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        
+        const btn = document.getElementById('submitRecordBtn');
+        btn.disabled = false;
+        btn.textContent = "傳送成績";
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-400');
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        document.getElementById('submitStatus').classList.add('hidden');
+        
+        loadQuestion();
+    } catch (error) {
+        alert("🚨 系統錯誤！\n\n無法讀取題庫。\n錯誤原因：" + error.message + "\n\n請確保所有的腳本檔案 (如 binary.js) 皆已成功上傳並載入。您可以嘗試按下 Ctrl+F5 強制重新整理。");
+        console.error(error);
     }
-    
-    currentQuestionIndex = 0;
-    score = 0;
-    updateScoreDisplay();
-    
-    document.getElementById('startScreen').classList.add('hidden');
-    document.getElementById('endScreen').classList.add('hidden');
-    document.getElementById('appContainer').classList.remove('hidden');
-    
-    const btn = document.getElementById('submitRecordBtn');
-    btn.disabled = false;
-    btn.textContent = "傳送成績";
-    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-400');
-    btn.classList.add('bg-green-600', 'hover:bg-green-700');
-    document.getElementById('submitStatus').classList.add('hidden');
-    
-    loadQuestion();
 }
 
 function loadQuestion() {
@@ -274,7 +299,6 @@ function loadQuestion() {
         optionsGrid.appendChild(btn);
     });
 
-    // 同步渲染題目與選項，零延遲
     renderMath();
 }
 
@@ -330,7 +354,6 @@ function showFeedback(type, message, showNextBtn) {
         nextBtn.classList.add('hidden');
     }
 
-    // 同步渲染解答區域，零延遲
     renderMath();
 }
 
@@ -398,11 +421,9 @@ function submitToGoogleSheet() {
     let displayLevel = currentLevelPref === 'mixed' ? '綜合挑戰' : currentLevelPref.toString().toUpperCase();
     let levelText = `程度 ${displayLevel}`;
 
-    // 計算滿分與百分比
     let totalScoreVal = totalQuestionsConfig * 10;
     let percentageVal = ((score / totalScoreVal) * 100).toFixed(0) + "%";
 
-    // 資料已拆分為：課題 (topic) 與 程度 (level)
     document.getElementById('form_className').value = className;
     document.getElementById('form_classNumber').value = classNumber;
     document.getElementById('form_studentName').value = studentName;
@@ -431,7 +452,7 @@ function showSubmitSuccess() {
     statusText.className = "text-center text-sm font-bold mt-3 text-green-600 block";
 }
 
-// 極速局部渲染，解決延遲及防禦外部代碼干擾
+// --- 渲染數學公式 ---
 function renderMath() {
     if (typeof renderMathInElement !== 'undefined') {
         const config = {
@@ -443,7 +464,7 @@ function renderMath() {
             throwOnError: false
         };
         
-        // 針對特定區塊進行同步渲染，速度最快且不會影響版面
+        // 針對特定區塊進行同步渲染，提升效能
         const qText = document.getElementById('questionText');
         const optGrid = document.getElementById('optionsGrid');
         const fbArea = document.getElementById('feedbackArea');
