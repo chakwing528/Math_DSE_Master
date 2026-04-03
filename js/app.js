@@ -312,21 +312,96 @@ function showEndScreen() {
     
     document.getElementById('motivationalQuote').textContent = selectedQuote.text;
     
-    // 處理獎勵顯示
-    let rewardEl = document.getElementById('rewardDisplay');
-    if (!rewardEl) {
-        rewardEl = document.createElement('div');
-        rewardEl.id = 'rewardDisplay';
-        rewardEl.className = 'mt-4 text-sm sm:text-base font-bold text-pink-600 bg-pink-50 p-3 rounded-lg border border-pink-200 hidden inline-block';
+    // 處理獎勵顯示 (刮刮卡形式)
+    let rewardContainer = document.getElementById('rewardContainer');
+    if (!rewardContainer) {
+        rewardContainer = document.createElement('div');
+        rewardContainer.id = 'rewardContainer';
+        rewardContainer.className = 'mt-6 w-full max-w-sm mx-auto hidden';
         const quoteContainer = document.getElementById('motivationalQuote').parentElement.parentElement;
-        quoteContainer.appendChild(rewardEl);
+        // 將刮刮卡加在引用句子的正下方
+        quoteContainer.parentElement.insertBefore(rewardContainer, quoteContainer.nextSibling);
     }
     
     if (selectedQuote.reward && selectedQuote.reward.trim() !== "") {
-        rewardEl.innerHTML = "🎁 <strong>恭喜獲得獎勵：</strong>" + selectedQuote.reward;
-        rewardEl.classList.remove('hidden');
+        rewardContainer.classList.remove('hidden');
+        rewardContainer.innerHTML = `
+            <div class="relative w-full h-20 sm:h-24 rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm select-none" style="touch-action: none;">
+                <div class="absolute inset-0 flex items-center justify-center bg-pink-50 text-pink-600 font-bold px-4 text-center z-0 text-sm sm:text-base">
+                    🎁 ${selectedQuote.reward}
+                </div>
+                <canvas id="scratchCanvas" class="absolute inset-0 w-full h-full z-10 cursor-pointer"></canvas>
+            </div>
+            <div class="text-xs text-slate-400 mt-2 text-center">💡 用手指或滑鼠刮開塗層看獎勵</div>
+        `;
+
+        // 設定微小延遲以確保 Canvas 已經渲染在畫面上，才能正確取得寬高
+        setTimeout(() => {
+            const canvas = document.getElementById('scratchCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            // 畫上灰色塗層
+            ctx.fillStyle = '#cbd5e1'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 寫上提示文字
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillStyle = '#64748b'; 
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✨ 刮刮看有什麼獎勵 ✨', canvas.width / 2, canvas.height / 2);
+
+            // 設定橡皮擦屬性
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 25; // 控制刮開的粗細
+            ctx.globalCompositeOperation = 'destination-out';
+
+            let isDrawing = false;
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const evt = e.touches ? e.touches[0] : e;
+                return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+            }
+
+            function startDraw(e) {
+                isDrawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function drawing(e) {
+                if (!isDrawing) return;
+                e.preventDefault(); // 防止手機端刮卡時畫面跟著捲動
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function endDraw() { isDrawing = false; }
+
+            // 滑鼠事件
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', drawing);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseleave', endDraw);
+
+            // 手機觸控事件
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', drawing, { passive: false });
+            canvas.addEventListener('touchend', endDraw);
+            canvas.addEventListener('touchcancel', endDraw);
+        }, 50);
+
     } else {
-        rewardEl.classList.add('hidden');
+        rewardContainer.classList.add('hidden');
+        rewardContainer.innerHTML = '';
     }
 }
 
