@@ -10,7 +10,7 @@ const motivationalQuotes = [
     "未來的你，必定感激今天努力的自己。", "默默耕耘，總有收穫。", "答應自己，每天堅持多 1 分鐘。", "今天的累積，是明天的底氣。"
 ];
 
-// 根據 Canvas 提供的「課題設定表.csv」建立預設邏輯
+// 根據 Canvas 提供的「課題設定表.csv」建立預設邏輯 (已修復因式分解分層)
 const fallbackConfigs = {
     'indices': { name: '指數定律', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1', desc: '只有 1 個運算步驟<br>鞏固單一法則。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3', desc: '只有 2 個運算步驟<br>學習法則轉換。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '包含 2 個變數<br>嚴格只有 2 步。' } ] },
     'factorization': { name: '因式分解', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '提公因式<br>學習抽出共同因子。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '公式分解<br>包含一元與二元的完全平方與平方差。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '因式分解<br>包含一元與二元的十字相乘法。' } ] },
@@ -171,6 +171,10 @@ function startGlobalMixed(level) {
                 lvl = String(maxSupported);
             }
             
+            // 特別處理因式分解 (若因子分解舊邏輯需要 2a/2b)
+            // 注意：新的 factorization.js 已經可以自動處理 levelType='2' 和 '3'
+            // 為了極度安全，這段由內部自動處理，不再強制分派 a 或 b。
+            
             // 每次生成一題對應難度的題目
             if (t === 'indices') qArr = generateIndicesQuestions(1, lvl);
             else if (t === 'factorization') qArr = generateFactorizationQuestions(1, lvl);
@@ -186,7 +190,7 @@ function startGlobalMixed(level) {
             }
         });
 
-        // 設定好題目後切換畫面
+        // 設定好題目後切換畫面 (確保修復重新挑戰時的問題)
         currentQuestionIndex = 0; score = 0; updateScoreDisplay();
         document.getElementById('topicScreen').classList.add('hidden');
         document.getElementById('startScreen').classList.add('hidden');
@@ -230,6 +234,7 @@ function startGame(levelPref) {
         
         currentQuestionIndex = 0; score = 0; updateScoreDisplay();
         document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('endScreen').classList.add('hidden'); // 👈 確保重做時隱藏結算畫面
         document.getElementById('appContainer').classList.remove('hidden');
         
         const btn = document.getElementById('submitRecordBtn');
