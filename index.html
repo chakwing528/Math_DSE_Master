@@ -1177,7 +1177,7 @@ async function fetchConfig(isSilent = false) {
     }
 }
 
-function renderLeaderboards(overrideClass = null, overrideName = null) {
+function renderLeaderboards(overrideClass = null, overrideNum = null) {
     const homeContainer = document.getElementById('leaderboard-home-container');
     const endContainer = document.getElementById('leaderboard-end-container');
     const myRankHome = document.getElementById('my-rank-home');
@@ -1194,21 +1194,21 @@ function renderLeaderboards(overrideClass = null, overrideName = null) {
         return;
     }
     
-    // 🌟 優先使用剛輸入的即時名字，否則才使用 localStorage (徹底解決不同步問題)
+    // 🌟 優先使用剛輸入的即時班別與「學號」，否則才使用 localStorage
     const currentUserClass = (overrideClass || localStorage.getItem('dse_className') || '').toUpperCase().trim();
-    const currentUserName = (overrideName || localStorage.getItem('dse_studentName') || '').toUpperCase().trim();
+    const currentUserNum = String(overrideNum || localStorage.getItem('dse_classNumber') || '').trim();
 
     let html = '';
     let userRank = -1;
     let userScore = 0;
     let userMatched = false;
 
-    // 1. 尋找使用者的最高名次
+    // 1. 尋找使用者的最高名次 (🌟 改為比對：班別 + 學號)
     globalLeaderboard.forEach((student, index) => {
         const sClass = String(student.className).toUpperCase().trim();
-        const sName = String(student.studentName).toUpperCase().trim();
+        const sNum = String(student.classNum).trim();
         
-        if (sClass === currentUserClass && sName === currentUserName && !userMatched) {
+        if (sClass === currentUserClass && sNum === currentUserNum && !userMatched) {
             userRank = index + 1;
             userScore = student.totalScore;
             userMatched = true;
@@ -1224,8 +1224,10 @@ function renderLeaderboards(overrideClass = null, overrideName = null) {
         else rankIcon = `<span class="inline-block w-6 text-center text-slate-400 font-bold text-sm">${index + 1}.</span>`;
         
         const sClass = String(student.className).toUpperCase().trim();
-        const sName = String(student.studentName).toUpperCase().trim();
-        const isMe = (sClass === currentUserClass && sName === currentUserName);
+        const sNum = String(student.classNum).trim();
+        
+        // 🌟 改為比對：班別 + 學號
+        const isMe = (sClass === currentUserClass && sNum === currentUserNum);
         
         // 只在該使用者的「最高分」紀錄標記高亮
         const isHighestMe = isMe && (index + 1 === userRank);
@@ -1235,6 +1237,7 @@ function renderLeaderboards(overrideClass = null, overrideName = null) {
         const scoreClass = isHighestMe ? 'text-amber-700' : 'text-indigo-600';
         const highlightBadge = isHighestMe ? `<span class="ml-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">你</span>` : '';
 
+        // 🌟 顯示格式包含學號：班別 (學號) 姓名
         html += `
         <div class="flex justify-between items-center ${bgClass} p-3 rounded-lg border shadow-sm transition-all">
             <div class="flex items-center gap-2">
@@ -1251,7 +1254,7 @@ function renderLeaderboards(overrideClass = null, overrideName = null) {
 
     // --- 渲染專屬排名小欄 ---
     let myRankHtml = '';
-    if (currentUserClass && currentUserName) {
+    if (currentUserClass && currentUserNum) {
         if (userRank !== -1) {
             myRankHtml = `
             <div class="bg-amber-100 border border-amber-400 p-3 rounded-lg flex justify-between items-center shadow-sm mb-4">
