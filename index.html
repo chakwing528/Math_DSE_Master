@@ -1600,14 +1600,17 @@ function submitToGoogleSheet() {
     // 🌟 前端即時預測加分機制
     isFetchingLock = true; 
     const searchClass = className.toUpperCase().trim();
-    const searchName = studentName.toUpperCase().trim();
+    const searchNum = String(classNumber).trim(); // 🌟 鎖定學號
     
     let found = false;
     for (let i = 0; i < globalLeaderboard.length; i++) {
         const sClass = String(globalLeaderboard[i].className).toUpperCase().trim();
-        const sName = String(globalLeaderboard[i].studentName).toUpperCase().trim();
-        if (sClass === searchClass && sName === searchName) {
+        const sNum = String(globalLeaderboard[i].classNum).trim();
+        
+        // 🌟 改為比對：班別 + 學號
+        if (sClass === searchClass && sNum === searchNum) {
             globalLeaderboard[i].totalScore += score;
+            globalLeaderboard[i].studentName = studentName; // 順便更新為最新輸入的姓名
             found = true;
             break;
         }
@@ -1616,7 +1619,7 @@ function submitToGoogleSheet() {
         globalLeaderboard.push({
             className: searchClass,
             classNum: classNumber,
-            studentName: studentName.trim(), 
+            studentName: studentName, 
             totalScore: score
         });
     }
@@ -1625,8 +1628,8 @@ function submitToGoogleSheet() {
     globalLeaderboard.sort((a, b) => b.totalScore - a.totalScore);
     currentLeaderboardHash = JSON.stringify(globalLeaderboard);
     
-    // 🌟 關鍵修正：將畫面上剛輸入的資料強行傳入函數，保證 UI 100% 精準判定
-    renderLeaderboards(className, studentName);
+    // 🌟 關鍵修正：將畫面上剛輸入的班別與「學號」強行傳入函數
+    renderLeaderboards(className, classNumber);
 
     // 🌟 背景傳送至 Google Sheet
     let displayLevel = currentLevelPref === 'mixed' ? '綜合挑戰' : currentLevelPref.toString().toUpperCase();
