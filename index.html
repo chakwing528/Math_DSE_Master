@@ -129,6 +129,8 @@
                             <span class="font-bold">正在讀取最新數據...</span>
                         </div>
                     </div>
+                    <!-- 🌟 我的排名狀態欄 -->
+                    <div id="my-rank-home" class="max-w-3xl mx-auto text-left"></div>
                 </div>
 
             </div>
@@ -265,6 +267,8 @@
                             <span class="text-sm font-bold">正在讀取最新數據...</span>
                         </div>
                     </div>
+                    <!-- 🌟 我的排名狀態欄 -->
+                    <div id="my-rank-end" class="mt-4 pt-4 border-t border-amber-200"></div>
                 </div>
                 
                 <div class="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
@@ -303,7 +307,7 @@
     </div>
 
     <div class="fixed bottom-3 left-3 text-slate-400 font-medium text-sm z-50">
-        版本：V63 (Top 100 排行榜與玩家高亮顯示)
+        版本：V64 (Top 100 排行榜與專屬狀態欄)
     </div>
 
     <!-- ========================================== -->
@@ -1183,11 +1187,17 @@ async function fetchConfig(isSilent = false) {
 function renderLeaderboards() {
     const homeContainer = document.getElementById('leaderboard-home-container');
     const endContainer = document.getElementById('leaderboard-end-container');
+    const myRankHome = document.getElementById('my-rank-home');
+    const myRankEnd = document.getElementById('my-rank-end');
 
     if (!globalLeaderboard || globalLeaderboard.length === 0) {
         const emptyHtml = `<div class="col-span-full text-center py-6 text-slate-500 font-bold">目前尚無排名數據，成為第一個上榜的人吧！</div>`;
         if (homeContainer) homeContainer.innerHTML = emptyHtml;
         if (endContainer) endContainer.innerHTML = emptyHtml;
+        
+        const myRankHtml = `<div class="bg-slate-50 border border-slate-200 p-3 rounded-lg text-center text-sm text-slate-500 shadow-sm mt-4">💡 遞交一次成績後，即可在此顯示你的專屬排名狀態。</div>`;
+        if (myRankHome) myRankHome.innerHTML = myRankHtml;
+        if (myRankEnd) myRankEnd.innerHTML = myRankHtml;
         return;
     }
     
@@ -1195,6 +1205,9 @@ function renderLeaderboards() {
     const currentUserName = localStorage.getItem('dse_studentName') || '';
 
     let html = '';
+    let userRank = -1;
+    let userScore = 0;
+
     globalLeaderboard.forEach((student, index) => {
         let rankIcon = '';
         if (index === 0) rankIcon = '🥇';
@@ -1204,6 +1217,11 @@ function renderLeaderboards() {
         
         // 判斷是否為當前玩家
         const isCurrentUser = (student.className === currentUserClass && student.studentName === currentUserName);
+        if (isCurrentUser) {
+            userRank = index + 1;
+            userScore = student.totalScore;
+        }
+
         const bgClass = isCurrentUser ? 'bg-amber-100 border-amber-400 ring-2 ring-amber-300' : 'bg-white border-slate-100';
         const textClass = isCurrentUser ? 'text-amber-800' : 'text-slate-700';
         const scoreClass = isCurrentUser ? 'text-amber-700' : 'text-indigo-600';
@@ -1222,6 +1240,32 @@ function renderLeaderboards() {
 
     if (homeContainer) homeContainer.innerHTML = html;
     if (endContainer) endContainer.innerHTML = html;
+
+    // --- 渲染專屬排名小欄 ---
+    let myRankHtml = '';
+    if (currentUserClass && currentUserName) {
+        if (userRank !== -1) {
+            myRankHtml = `
+            <div class="bg-amber-100 border border-amber-400 p-3 rounded-lg flex justify-between items-center shadow-sm mt-4">
+                <span class="font-bold text-amber-800">👉 你的目前排名：第 ${userRank} 名</span>
+                <span class="text-amber-700 font-bold">${userScore} 分</span>
+            </div>`;
+        } else {
+            myRankHtml = `
+            <div class="bg-slate-100 border border-slate-300 p-3 rounded-lg flex justify-between items-center shadow-sm mt-4">
+                <span class="font-bold text-slate-600">👉 你的目前排名：未上榜 (前 ${globalLeaderboard.length} 名外)</span>
+                <span class="text-slate-500 font-bold text-sm">繼續刷題累積積分吧！</span>
+            </div>`;
+        }
+    } else {
+        myRankHtml = `
+        <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg text-center text-sm text-slate-500 shadow-sm mt-4">
+            💡 遞交一次成績後，即可在此顯示你的專屬排名狀態。
+        </div>`;
+    }
+
+    if (myRankHome) myRankHome.innerHTML = myRankHtml;
+    if (myRankEnd) myRankEnd.innerHTML = myRankHtml;
 }
 
 function setQuestionNum(num) {
