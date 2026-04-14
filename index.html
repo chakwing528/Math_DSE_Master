@@ -119,11 +119,15 @@
                 </div>
 
                 <!-- 🏆 勤學排行榜 (首頁) -->
-                <div id="leaderboard-home" class="mt-12 border-t border-slate-200 pt-8 hidden">
+                <div id="leaderboard-home" class="mt-12 border-t border-slate-200 pt-8">
                     <h2 class="text-xl sm:text-2xl font-bold text-amber-600 mb-2">🏆 勤學排行榜 (Top 20)</h2>
                     <p class="text-sm sm:text-base text-slate-500 mb-6">全校最強刷題王者，累積最高分的勤學生都在這裡！</p>
                     <div id="leaderboard-home-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto text-left">
-                        <!-- JS 動態填入排行榜 -->
+                        <!-- 預設顯示載入中狀態 -->
+                        <div class="col-span-full text-center py-6 text-slate-500 flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-slate-100">
+                            <svg class="animate-spin h-8 w-8 text-amber-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="font-bold">正在讀取最新數據...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -252,10 +256,14 @@
                 </div>
 
                 <!-- 🏆 勤學排行榜 (結算頁) -->
-                <div id="leaderboard-end" class="max-w-xl mx-auto mb-8 p-5 sm:p-6 bg-amber-50 border border-amber-200 rounded-xl shadow-sm text-left hidden">
+                <div id="leaderboard-end" class="max-w-xl mx-auto mb-8 p-5 sm:p-6 bg-amber-50 border border-amber-200 rounded-xl shadow-sm text-left">
                     <h3 class="text-base sm:text-lg font-bold text-amber-800 mb-4">🏆 勤學排行榜 (Top 20)</h3>
                     <div id="leaderboard-end-container" class="flex flex-col gap-2 max-h-64 overflow-y-auto pr-2 math-scroll">
-                        <!-- JS 動態填入 -->
+                        <!-- 預設顯示載入中狀態 -->
+                        <div class="text-center py-4 text-amber-600 flex flex-col items-center justify-center">
+                            <svg class="animate-spin h-6 w-6 text-amber-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span class="text-sm font-bold">正在讀取最新數據...</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -295,7 +303,7 @@
     </div>
 
     <div class="fixed bottom-3 left-3 text-slate-400 font-medium text-sm z-50">
-        版本：V60 (修復展開提示訊息遺失)
+        版本：V62 (修復排行榜快取自動更新)
     </div>
 
     <!-- ========================================== -->
@@ -406,7 +414,6 @@ function wrapHint(msg, eqHtml) {
         ${eqHtml}
     </div>`;
 }
-
 
 // ==========================================
 // 2. 題庫生成器
@@ -1005,7 +1012,6 @@ function generateBinaryQuestions(num, levelPref) {
 }
 
 // --- 恆等式的展開 (Expansion) ---
-// 🌟 這裡補回遺失的展開錯誤提示訊息
 const msgExp1 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 忘記了中間項 2ab</div>`;
 const msgExp2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 展開符號發生錯誤</div>`;
 const msgExp3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 係數平方計算錯誤</div>`;
@@ -1142,29 +1148,50 @@ let totalQuestionsConfig = 3;
 let dynamicQuotes = [];
 let dynamicTopicConfig = [];
 let globalLeaderboard = []; 
+let currentLeaderboardHash = ""; // 🌟 新增：用於記錄排行榜狀態，避免重複渲染導致畫面閃爍
 
-async function fetchConfig() {
+async function fetchConfig(isSilent = false) {
     try {
         if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes("請在此貼上")) {
-            const response = await fetch(GOOGLE_SCRIPT_URL);
+            // 🌟 核心防快取機制 (Cache Buster)：強制瀏覽器每次都向伺服器要最新資料，而不是拿 5 秒前的舊資料
+            const cacheBusterUrl = GOOGLE_SCRIPT_URL + (GOOGLE_SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+            const response = await fetch(cacheBusterUrl);
             const data = await response.json();
+            
             if (data && typeof data === 'object') {
                 if (data.quotes) dynamicQuotes = data.quotes;
                 if (data.topicConfig) dynamicTopicConfig = data.topicConfig;
                 if (data.leaderboard) {
-                    globalLeaderboard = data.leaderboard;
-                    renderLeaderboards(); 
+                    const newHash = JSON.stringify(data.leaderboard);
+                    // 只有當排行榜數據有變化時，才重新渲染畫面，避免干擾使用者操作
+                    if (newHash !== currentLeaderboardHash) {
+                        globalLeaderboard = data.leaderboard;
+                        currentLeaderboardHash = newHash;
+                        renderLeaderboards(); 
+                    }
+                } else if (currentLeaderboardHash !== "empty") {
+                    globalLeaderboard = [];
+                    currentLeaderboardHash = "empty";
+                    renderLeaderboards();
                 }
-                console.log("✅ 成功從統一 Google Sheet 載入座右銘、設定與排行榜！");
+                if (!isSilent) console.log("✅ 成功從統一 Google Sheet 載入座右銘、設定與排行榜！");
             }
         }
     } catch (e) {
-        console.warn("⚠️ 讀取設定失敗，將使用系統備用設定。");
+        if (!isSilent) console.warn("⚠️ 讀取設定失敗，將使用系統備用設定。");
     }
 }
 
 function renderLeaderboards() {
-    if (!globalLeaderboard || globalLeaderboard.length === 0) return;
+    const homeContainer = document.getElementById('leaderboard-home-container');
+    const endContainer = document.getElementById('leaderboard-end-container');
+
+    if (!globalLeaderboard || globalLeaderboard.length === 0) {
+        const emptyHtml = `<div class="col-span-full text-center py-6 text-slate-500 font-bold">目前尚無排名數據，成為第一個上榜的人吧！</div>`;
+        if (homeContainer) homeContainer.innerHTML = emptyHtml;
+        if (endContainer) endContainer.innerHTML = emptyHtml;
+        return;
+    }
     
     let html = '';
     globalLeaderboard.forEach((student, index) => {
@@ -1185,14 +1212,8 @@ function renderLeaderboards() {
         `;
     });
 
-    const homeContainer = document.getElementById('leaderboard-home-container');
-    const endContainer = document.getElementById('leaderboard-end-container');
-    
     if (homeContainer) homeContainer.innerHTML = html;
     if (endContainer) endContainer.innerHTML = html;
-    
-    document.getElementById('leaderboard-home')?.classList.remove('hidden');
-    document.getElementById('leaderboard-end')?.classList.remove('hidden');
 }
 
 function setQuestionNum(num) {
@@ -1505,7 +1526,6 @@ function submitToGoogleSheet() {
         statusText.textContent = "⚠️ 請填寫所有資料"; statusText.className = "text-center text-sm font-bold mt-3 text-red-500 block"; return;
     }
 
-    // 🌟 將姓名資訊存入 localStorage，方便下次自動填寫
     localStorage.setItem('dse_className', className);
     localStorage.setItem('dse_classNumber', classNumber);
     localStorage.setItem('dse_studentName', studentName);
@@ -1536,6 +1556,11 @@ function submitToGoogleSheet() {
                 lockOverlay.style.opacity = '0';
                 setTimeout(() => lockOverlay.classList.add('hidden'), 300);
             }
+
+            // 🌟 傳送成功後，主動延遲 2 秒後立刻抓取一次最新排行榜 (等待 Google Sheet 寫入和公式計算)
+            setTimeout(() => {
+                fetchConfig(true);
+            }, 2000);
         })
         .catch(err => {
             btn.disabled = false; btn.textContent = "傳送成績"; btn.classList.remove('opacity-50');
@@ -1566,6 +1591,9 @@ window.submitToGoogleSheet = submitToGoogleSheet;
 window.onload = () => { 
     showTopicScreen(); 
     fetchConfig(); 
+
+    // 🌟 每 5 秒自動在背景刷新一次排行榜數據 (靜默模式)
+    setInterval(() => fetchConfig(true), 5000); 
 
     // 🌟 自動填入記憶的學生資料
     const savedClass = localStorage.getItem('dse_className');
