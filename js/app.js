@@ -354,46 +354,39 @@ function showEndScreen() {
     let currentProgress = oldScore % 100;
     let nextThresholdDist = 100 - currentProgress;
 
+    // 將進度條準確渲染到 index.html 中預留的 placeholder
     let rewardContainer = document.getElementById('rewardContainer');
-    if (!rewardContainer) {
-        rewardContainer = document.createElement('div');
-        rewardContainer.id = 'rewardContainer';
-        rewardContainer.className = 'w-full max-w-xl mx-auto mt-6 mb-8';
-        let leaderboardEnd = document.getElementById('leaderboard-end');
-        if (leaderboardEnd) leaderboardEnd.insertAdjacentElement('afterend', rewardContainer);
-    }
-    
-    rewardContainer.classList.remove('hidden');
-    
-    // 👉 核心需求：渲染華麗的視覺化進度條
-    rewardContainer.innerHTML = `
-        <div id="rewardZone" class="w-full bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden transition-all duration-500">
-            <!-- 進度條介面 -->
-            <div id="progressUI" class="block transition-opacity duration-500">
-                <div class="flex justify-between items-end mb-3">
-                    <span class="font-bold text-slate-700 text-lg">🎁 刮刮卡解鎖進度</span>
-                    <span class="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md" id="progressTextUI">${currentProgress} / 100</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-5 mb-2 overflow-hidden border border-slate-200 shadow-inner relative">
-                    <div id="progressBarFill" class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-5 rounded-full transition-all duration-1000 ease-out relative" style="width: ${currentProgress}%">
-                        <div class="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_infinite]"></div>
+    if (rewardContainer) {
+        rewardContainer.classList.remove('hidden');
+        rewardContainer.innerHTML = `
+            <div id="rewardZone" class="w-full bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden transition-all duration-500">
+                <!-- 進度條介面 -->
+                <div id="progressUI" class="block transition-opacity duration-500">
+                    <div class="flex justify-between items-end mb-3">
+                        <span class="font-bold text-slate-700 text-lg">🎁 刮刮卡解鎖進度</span>
+                        <span class="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md" id="progressTextUI">${currentProgress} / 100</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-5 mb-2 overflow-hidden border border-slate-200 shadow-inner relative">
+                        <div id="progressBarFill" class="bg-gradient-to-r from-indigo-400 to-indigo-600 h-5 rounded-full transition-all duration-1000 ease-out relative" style="width: ${currentProgress}%">
+                            <div class="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_infinite]"></div>
+                        </div>
+                    </div>
+                    <div class="text-sm text-slate-500 text-center mt-3 font-medium" id="progressHint">
+                        還差 <span class="text-indigo-600 font-bold">${nextThresholdDist} 分</span> 即可獲得抽獎機會！傳送成績後更新進度。
                     </div>
                 </div>
-                <div class="text-sm text-slate-500 text-center mt-3 font-medium" id="progressHint">
-                    還差 <span class="text-indigo-600 font-bold">${nextThresholdDist} 分</span> 即可獲得抽獎機會！傳送成績後更新進度。
-                </div>
-            </div>
 
-            <!-- 刮刮卡介面 (預設隱藏) -->
-            <div id="scratchUI" class="hidden opacity-0 transition-opacity duration-500">
-                <div class="relative w-full h-20 sm:h-24 rounded-xl overflow-hidden border-2 border-amber-200 shadow-sm" style="touch-action:none;">
-                    <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-amber-50 to-orange-50 text-orange-600 font-bold px-4 text-center text-sm sm:text-base">🎁 <span id="rewardTextDisplay"></span></div>
-                    <canvas id="scratchCanvas" class="absolute inset-0 w-full h-full z-10 cursor-pointer"></canvas>
+                <!-- 刮刮卡介面 (預設隱藏) -->
+                <div id="scratchUI" class="hidden opacity-0 transition-opacity duration-500">
+                    <div class="relative w-full h-20 sm:h-24 rounded-xl overflow-hidden border-2 border-amber-200 shadow-sm" style="touch-action:none;">
+                        <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-amber-50 to-orange-50 text-orange-600 font-bold px-4 text-center text-sm sm:text-base">🎁 <span id="rewardTextDisplay"></span></div>
+                        <canvas id="scratchCanvas" class="absolute inset-0 w-full h-full z-10 cursor-pointer"></canvas>
+                    </div>
+                    <div class="text-xs sm:text-sm text-amber-600 mt-3 text-center font-bold animate-pulse">✨ 恭喜達成滿百目標，快刮開上方塗層看看！✨</div>
                 </div>
-                <div class="text-xs sm:text-sm text-amber-600 mt-3 text-center font-bold animate-pulse">✨ 恭喜達成滿百目標，快刮開上方塗層看看！✨</div>
             </div>
-        </div>
-    `;
+        `;
+    }
 }
 
 function updateScoreDisplay() { document.getElementById('scoreDisplay').textContent = score; }
@@ -466,7 +459,7 @@ function submitToGoogleSheet() {
                 const hint = document.getElementById('progressHint');
                 
                 if (fill) fill.style.width = targetProgress + '%';
-                if (textUI) textUI.textContent = `${backendNewTotal % 100} / 100`;
+                if (textUI) textUI.textContent = isCrossed ? '100 / 100' : `${backendNewTotal % 100} / 100`;
 
                 if (isCrossed) {
                     if (hint) hint.innerHTML = `<span class="text-amber-600 font-bold">🎉 恭喜達成滿百目標！正在解鎖刮刮卡...</span>`;
