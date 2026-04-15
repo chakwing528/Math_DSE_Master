@@ -8,6 +8,10 @@ const msgFracMulDiv2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 指
 const msgFracMulDiv3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 忘記變號：(x-y) 與 (y-x) 約簡應為 -1</div>`;
 const msgFracMulDiv4 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 因式分解未完全或錯誤</div>`;
 
+// 🌟 輔助函數：產生紅線約簡 KaTeX (對應圖片中的紅線畫去)
+const cancelTerm = (str) => `\\color{red}{\\cancel{\\color{black}{${str}}}}`;
+const cancelPwr = (str, pwr) => `${str}^{\\color{red}{\\cancel{\\color{black}{${pwr}}}}}`;
+
 // ==========================================
 // 專用強大分數排版工具
 // ==========================================
@@ -160,6 +164,10 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 steps.push({text: questionMathStr, hide: false});
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
                 steps.push({text: `\\frac{${a}${bStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d}${bStr}}`, hide: false});
+                
+                // 🌟 新增：清楚顯示紅線約簡 (Cancellation)
+                steps.push({text: `\\frac{${a}${cancelTerm(bStr)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d}${cancelTerm(bStr)}}`, hide: false});
+                
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(a*c, b*d, v, 0, v2, q1+q2, "", 0);
@@ -182,18 +190,24 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let d2Str = isDiv ? n2Raw : d2Raw;
                 questionMathStr = `\\frac{${n1Str}}{${d1Str}} ${opStr} \\frac{${n2Str}}{${d2Str}}`;
 
+                bStr = `(${v} - ${k})`;
                 correctStr = formatFracAll(-c, b, v, 0, v2, q2-q1, "", 0);
 
                 steps.push({text: questionMathStr, hide: false});
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
-                steps.push({text: `\\frac{${v} - ${k}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{-(${v} - ${k})}`, hide: false});
+                steps.push({text: `\\frac{${bStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{-${bStr}}`, hide: false});
+                
+                // 🌟 新增：清楚顯示紅線約簡 (Cancellation)
+                steps.push({text: `\\frac{${cancelTerm(bStr)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{-${cancelTerm(bStr)}}`, hide: false});
+                
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, "", 0); 
                 let w2 = formatFracAll(-c, b, v, 0, v2, q1+q2, "", 0); 
                 let w3 = formatFracAll(c, b, v, 0, v2, q1+q2, "", 0);
                 
-                let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+                // 特別解釋抽出負號的技巧
+                let eqCorrectHtml = wrapHint(msgCorrect + `<div class='text-sm text-slate-500 mb-2 font-bold'>💡 技巧：${k} - ${v} 可以抽出負號變成 -(${v} - ${k})，然後互相約簡！</div>`, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
                 options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv3, buildEq(steps))});
                 options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
@@ -236,17 +250,25 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 questionMathStr = `\\frac{${n1Str}}{${d1Str}} ${opStr} \\frac{${n2Str}}{${d2Str}}`;
 
                 let keptSign = sign > 0 ? '-' : '+';
-                let bStr = `(${v} ${keptSign} ${k})`;
+                let keepStr = `(${v} ${keptSign} ${k})`;
+                let cancelStr = `(${v} ${sign > 0 ? '+' : '-'} ${k})`;
 
-                correctStr = formatFracAll(c, b, v, 0, v2, q2-q1, bStr, 1);
+                correctStr = formatFracAll(c, b, v, 0, v2, q2-q1, keepStr, 1);
 
                 steps.push({text: questionMathStr, hide: false});
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
-                steps.push({text: `\\frac{(${v}-${k})(${v}+${k})}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d2Raw}}`, hide: false});
+                
+                let factoredN1 = `(${v}-${k})(${v}+${k})`;
+                steps.push({text: `\\frac{${factoredN1}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelStr}}`, hide: false});
+                
+                // 🌟 新增：清楚顯示紅線約簡
+                let canceledN1 = sign > 0 ? `(${v}-${k})${cancelTerm(cancelStr)}` : `${cancelTerm(cancelStr)}(${v}+${k})`;
+                steps.push({text: `\\frac{${canceledN1}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(cancelStr)}}`, hide: false});
+                
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${sign > 0 ? '+' : '-'} ${k})`, 1); // 留錯括號
-                let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, bStr, 1);
+                let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, keepStr, 1);
                 let w3 = formatFracAll(c, b, v, 0, v2, q2-q1, "", 0); // 忘記還有括號殘留
 
                 let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
@@ -278,7 +300,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
 
                 steps.push({text: questionMathStr, hide: false});
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
-                steps.push({text: `\\frac{${bStr}^2}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d2Raw}}`, hide: false});
+                steps.push({text: `\\frac{${bStr}^2}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${bStr}}`, hide: false});
+                
+                // 🌟 新增：清楚顯示紅線約簡 (對應圖片：劃掉 2 次方)
+                steps.push({text: `\\frac{${cancelPwr(bStr, 2)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(bStr)}}`, hide: false});
+                
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${sign > 0 ? '-' : '+'} ${k})`, 1); // 留錯括號
@@ -341,17 +367,23 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
 
             questionMathStr = `\\frac{${n1Str}}{${d1Str}} ${opStr} \\frac{${n2Str}}{${d2Str}}`;
 
-            let bStr = `(${v} ${n > 0 ? '+' : '-'} ${Math.abs(n)})`;
-            correctStr = formatFracAll(c, b, v, 0, v2, q2-q1, bStr, 1);
+            let cancelStr = `(${v} ${m > 0 ? '+' : '-'} ${Math.abs(m)})`;
+            let keepStr = `(${v} ${n > 0 ? '+' : '-'} ${Math.abs(n)})`;
+
+            correctStr = formatFracAll(c, b, v, 0, v2, q2-q1, keepStr, 1);
 
             steps.push({text: questionMathStr, hide: false});
             if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
-            steps.push({text: `\\frac{(${v} ${m > 0 ? '+' : '-'} ${Math.abs(m)})(${v} ${n > 0 ? '+' : '-'} ${Math.abs(n)})}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d2Raw}}`, hide: false});
+            steps.push({text: `\\frac{${cancelStr}${keepStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelStr}}`, hide: false});
+            
+            // 🌟 新增：清楚顯示紅線約簡
+            steps.push({text: `\\frac{${cancelTerm(cancelStr)}${keepStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(cancelStr)}}`, hide: false});
+            
             steps.push({text: correctStr, hide: false});
 
             let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${m > 0 ? '+' : '-'} ${Math.abs(m)})`, 1); // 留錯括號
-            let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, bStr, 1);
-            let w3 = formatFracAll(-c, b, v, 0, v2, q2-q1, bStr, 1); 
+            let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, keepStr, 1);
+            let w3 = formatFracAll(-c, b, v, 0, v2, q2-q1, keepStr, 1); 
 
             let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
             options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
