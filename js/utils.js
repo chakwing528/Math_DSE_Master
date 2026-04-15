@@ -3,6 +3,11 @@
 // 共用的正確訊息 HTML
 const msgCorrect = `<div class="text-green-700 font-bold text-lg mb-1">✅ 步驟正確！</div>`;
 
+// 處理負數的括號顯示 (例如: -5 變成 "(-5)")
+function safeNeg(n) { 
+    return n < 0 ? `(${n})` : n; 
+}
+
 // 隨機整數生成器 (包含 min，不包含 max)
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
