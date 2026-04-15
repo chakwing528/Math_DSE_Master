@@ -37,6 +37,25 @@ let globalLeaderboard = [];
 let currentLeaderboardHash = ""; 
 let isFetchingLock = false; 
 
+// ==========================================
+// 🌟 防崩潰安全機制：安全存取 localStorage
+// ==========================================
+function getStoredData(key) {
+    try { 
+        return localStorage.getItem(key) || ''; 
+    } catch (e) { 
+        return ''; 
+    }
+}
+
+function setStoredData(key, value) {
+    try { 
+        localStorage.setItem(key, value); 
+    } catch (e) { 
+        console.warn("無法寫入 localStorage，可能是隱私模式或本地檔案限制。");
+    }
+}
+
 // --- 動態從 Google Sheet 抓取設定 ---
 async function fetchConfig(isSilent = false) {
     if (isFetchingLock) return; 
@@ -65,7 +84,13 @@ async function fetchConfig(isSilent = false) {
             }
         }
     } catch (e) {
-        if (!isSilent) console.warn("⚠️ 讀取設定失敗，將使用系統備用設定。");
+        if (!isSilent) console.warn("⚠️ 讀取設定失敗，將使用系統備用設定。", e);
+        // 💡 即使網路錯誤，也要強制消除畫面上的「正在讀取最新數據...」
+        if (currentLeaderboardHash === "") {
+            globalLeaderboard = [];
+            currentLeaderboardHash = "error";
+            renderLeaderboards();
+        }
     }
 }
 
@@ -77,7 +102,7 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     const myRankEnd = document.getElementById('my-rank-end');
 
     if (!globalLeaderboard || globalLeaderboard.length === 0) {
-        const emptyHtml = `<div class="col-span-full text-center py-6 text-slate-500 font-bold">目前尚無排名數據，成為第一個上榜的人吧！</div>`;
+        const emptyHtml = `<div class="col-span-full text-center py-6 text-slate-500 font-bold">目前尚無排名數據，或網路連線異常。</div>`;
         if (homeContainer) homeContainer.innerHTML = emptyHtml;
         if (endContainer) endContainer.innerHTML = emptyHtml;
         
@@ -87,8 +112,9 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
         return;
     }
     
-    const currentUserClass = String(overrideClass || localStorage.getItem('dse_className') || '').toUpperCase().trim();
-    const currentUserNum = String(overrideNum || localStorage.getItem('dse_classNumber') || '').trim();
+    // 💡 使用 getStoredData 防止瀏覽器阻擋 localStorage 導致崩潰
+    const currentUserClass = String(overrideClass || getStoredData('dse_className')).toUpperCase().trim();
+    const currentUserNum = String(overrideNum || getStoredData('dse_classNumber')).trim();
 
     let html = '';
     let userRank = -1;
@@ -485,9 +511,10 @@ function submitToGoogleSheet() {
         statusText.textContent = "⚠️ 請填寫所有資料"; statusText.className = "text-center text-sm font-bold mt-3 text-red-500 block"; return;
     }
 
-    localStorage.setItem('dse_className', className);
-    localStorage.setItem('dse_classNumber', classNumber);
-    localStorage.setItem('dse_studentName', studentName);
+    // 💡 改用安全防呆寫入
+    setStoredData('dse_className', className);
+    setStoredData('dse_classNumber', classNumber);
+    setStoredData('dse_studentName', studentName);
 
     btn.disabled = true; btn.textContent = "傳送中..."; btn.classList.add('opacity-50');
     
@@ -594,9 +621,10 @@ window.onload = () => {
 
     setInterval(() => fetchConfig(true), 5000); 
 
-    const savedClass = localStorage.getItem('dse_className');
-    const savedNum = localStorage.getItem('dse_classNumber');
-    const savedName = localStorage.getItem('dse_studentName');
+    // 💡 改用安全防呆讀取
+    const savedClass = getStoredData('dse_className');
+    const savedNum = getStoredData('dse_classNumber');
+    const savedName = getStoredData('dse_studentName');
     if(savedClass) document.getElementById('className').value = savedClass;
     if(savedNum) document.getElementById('classNumber').value = savedNum;
     if(savedName) document.getElementById('studentName').value = savedName;
