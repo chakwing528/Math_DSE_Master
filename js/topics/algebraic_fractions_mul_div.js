@@ -8,51 +8,65 @@ const msgFracMulDiv2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 指
 const msgFracMulDiv3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 忘記變號：(x-y) 與 (y-x) 約簡應為 -1</div>`;
 const msgFracMulDiv4 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 因式分解未完全或錯誤</div>`;
 
+// 🌟 專屬提示框外掛 (包含 CSS 魔法：強制加粗所有約簡的斜線)
+function wrapHintLocal(msg, eqHtml) {
+    return `${msg}
+    <style>.katex svg line { stroke-width: 0.12em !important; }</style>
+    <div class="my-2 p-4 bg-white rounded-xl border border-slate-200 text-base sm:text-lg shadow-sm overflow-x-auto math-scroll max-w-full">
+        ${eqHtml}
+    </div>`;
+}
+
 // ==========================================
-// 🌟 仿教師紅筆批改系統 (強大視覺化跨項約簡)
-// 完全重現老師手寫批改：加粗紅線劃掉、標記剩餘數字與次方
+// 🌟 增強版：仿教師紅筆批改系統 (深色、實色、加粗)
 // ==========================================
+const colNum = '#CC0000'; // 深紅色 (Deep Red)
+const colV1  = '#0000CD'; // 深藍色 (Medium Blue)
+const colV2  = '#008000'; // 深綠色 (Green)
+const colPol = '#D2691E'; // 深橘色 (Chocolate)
 
 // 1. 處理數字的約簡畫線
-function getNumCancel(oldN, newN, pos) {
-    if (oldN === newN) return oldN === 1 ? "" : oldN.toString();
-    if (newN === 1) return `\\color{red}{\\cancel{\\color{black}{${oldN}}}}`;
+function getNumCancel(oldN, newN, pos, color) {
+    if (oldN === newN) return oldN === 1 ? "" : (oldN === -1 ? "-" : oldN.toString());
+    if (newN === 1) return `\\color{${color}}{\\cancel{\\color{black}{${oldN}}}}`;
     if (newN === -1) {
         return pos === 'top' 
-            ? `\\overset{\\color{red}{-1}}{\\color{red}{\\cancel{\\color{black}{${oldN}}}}}` 
-            : `\\underset{\\color{red}{-1}}{\\color{red}{\\cancel{\\color{black}{${oldN}}}}}`;
+            ? `\\overset{\\color{${color}}{\\mathbf{-1}}}{\\color{${color}}{\\cancel{\\color{black}{${oldN}}}}}` 
+            : `\\underset{\\color{${color}}{\\mathbf{-1}}}{\\color{${color}}{\\cancel{\\color{black}{${oldN}}}}}`;
     }
     return pos === 'top' 
-        ? `\\overset{\\color{red}{${newN}}}{\\color{red}{\\cancel{\\color{black}{${oldN}}}}}`
-        : `\\underset{\\color{red}{${newN}}}{\\color{red}{\\cancel{\\color{black}{${oldN}}}}}`;
+        ? `\\overset{\\color{${color}}{\\mathbf{${newN}}}}{\\color{${color}}{\\cancel{\\color{black}{${oldN}}}}}`
+        : `\\underset{\\color{${color}}{\\mathbf{${newN}}}}{\\color{${color}}{\\cancel{\\color{black}{${oldN}}}}}`;
 }
 
 // 2. 處理變數與次方的約簡畫線
-function getVarCancel(v, oldP, newP, pos) {
+function getVarCancel(v, oldP, newP, pos, color) {
     if (oldP === newP) return oldP === 0 ? "" : (oldP === 1 ? v : `${v}^{${oldP}}`);
+    
+    let oldStr = oldP === 1 ? v : `${v}^{${oldP}}`;
     if (newP === 0) {
-        let oldStr = oldP === 1 ? v : `${v}^{${oldP}}`;
-        return `\\color{red}{\\cancel{\\color{black}{${oldStr}}}}`;
+        return `\\color{${color}}{\\cancel{\\color{black}{${oldStr}}}}`;
     }
     if (newP === 1) {
-        return `${v}^{\\color{red}{\\cancel{\\color{black}{${oldP}}}}}`;
+        return `${v}^{\\color{${color}}{\\cancel{\\color{black}{${oldP}}}}}`;
     }
-    let posCmd = pos === 'top' ? `\\overset{\\color{red}{${newP}}}` : `\\underset{\\color{red}{${newP}}}`;
-    return `${v}^{${posCmd}{\\color{red}{\\cancel{\\color{black}{${oldP}}}}}}`;
+    let posCmd = pos === 'top' ? `\\overset{\\color{${color}}{\\mathbf{${newP}}}}` : `\\underset{\\color{${color}}{\\mathbf{${newP}}}}`;
+    return `${v}^{${posCmd}{\\color{${color}}{\\cancel{\\color{black}{${oldP}}}}}}`;
 }
 
 // 3. 處理括號因式的約簡畫線
-function getPolyCancel(polyStr, oldP, newP, pos) {
+function getPolyCancel(polyStr, oldP, newP, pos, color) {
     if (oldP === newP) return oldP === 0 ? "" : (oldP === 1 ? polyStr : `${polyStr}^{${oldP}}`);
+    
+    let oldStr = oldP === 1 ? polyStr : `${polyStr}^{${oldP}}`;
     if (newP === 0) {
-        let oldStr = oldP === 1 ? polyStr : `${polyStr}^{${oldP}}`;
-        return `\\color{red}{\\cancel{\\color{black}{${oldStr}}}}`;
+        return `\\color{${color}}{\\cancel{\\color{black}{${oldStr}}}}`;
     }
     if (newP === 1) {
-        return `${polyStr}^{\\color{red}{\\cancel{\\color{black}{${oldP}}}}}`;
+        return `${polyStr}^{\\color{${color}}{\\cancel{\\color{black}{${oldP}}}}}`;
     }
-    let posCmd = pos === 'top' ? `\\overset{\\color{red}{${newP}}}` : `\\underset{\\color{red}{${newP}}}`;
-    return `${polyStr}^{${posCmd}{\\color{red}{\\cancel{\\color{black}{${oldP}}}}}}`;
+    let posCmd = pos === 'top' ? `\\overset{\\color{${color}}{\\mathbf{${newP}}}}` : `\\underset{\\color{${color}}{\\mathbf{${newP}}}}`;
+    return `${polyStr}^{${posCmd}{\\color{${color}}{\\cancel{\\color{black}{${oldP}}}}}}`;
 }
 
 // 4. 合併畫掉的項 (隱藏多餘的 1)
@@ -118,7 +132,7 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
         let opStr = isDiv ? "\\div" : "\\times";
 
         // =====================================
-        // 程度 1：單項式乘除 (指數定律與跨項約簡)
+        // 程度 1：單項式乘除 (跨項彩色約簡)
         // =====================================
         if (levelType === '1') {
             qObj.level = "⭐ 程度 1";
@@ -147,26 +161,26 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             let g3 = gcd(a_val, d_val); a_val /= g3; d_val /= g3;
             let g4 = gcd(c_val, b_val); c_val /= g4; b_val /= g4;
             
-            let strA = getNumCancel(A, a_val, 'top');
-            let strB = getNumCancel(B, b_val, 'bottom');
-            let strC = getNumCancel(C, c_val, 'top');
-            let strD = getNumCancel(D, d_val, 'bottom');
+            let strA = getNumCancel(A, a_val, 'top', colNum);
+            let strB = getNumCancel(B, b_val, 'bottom', colNum);
+            let strC = getNumCancel(C, c_val, 'top', colNum);
+            let strD = getNumCancel(D, d_val, 'bottom', colNum);
 
             let newP1 = p1, newP2 = p2;
             if (p1 > p2) { newP1 = p1 - p2; newP2 = 0; }
             else if (p1 < p2) { newP1 = 0; newP2 = p2 - p1; }
             else { newP1 = 0; newP2 = 0; }
-            let strV1_N = getVarCancel(v1, p1, newP1, 'top');
-            let strV1_D = getVarCancel(v1, p2, newP2, 'bottom');
+            let strV1_N = getVarCancel(v1, p1, newP1, 'top', colV1);
+            let strV1_D = getVarCancel(v1, p2, newP2, 'bottom', colV1);
 
             let newQ1 = q1, newQ2 = q2;
             if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
             else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
             else { newQ2 = 0; newQ1 = 0; }
-            let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-            let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+            let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV2);
+            let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV2);
 
-            // 組合約簡後的分式 (保留兩個獨立分數)
+            // 組合約簡後的分式 (嚴格保留兩個獨立分數，不相乘)
             let stepN1 = joinNum(strA, strV1_N);
             let stepD1 = joinNum(strB, strV2_D);
             let stepN2 = joinNum(strC, strV2_N);
@@ -181,7 +195,7 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             steps.push({text: `\\frac{${stepN1}}{${stepD1}} \\times \\frac{${stepN2}}{${stepD2}}`, hide: false});
             steps.push({text: correctStr, hide: false});
 
-            let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+            let eqCorrectHtml = wrapHintLocal(msgCorrect, buildEq(steps));
 
             let w1 = formatFracAll(A*D, B*C, v1, isDiv? p1+p2 : p1-p2, v2, isDiv? q1+q2 : q2-q1, "", 0); 
             let w2 = formatFracAll(A*C, B*D, v1, p1+p2, v2, q1+q2, "", 0); 
@@ -189,9 +203,9 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
 
             let options = [
                 { text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml },
-                { text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv1, buildEq(steps)) },
-                { text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps)) },
-                { text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps)) }
+                { text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv1, buildEq(steps)) },
+                { text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps)) },
+                { text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps)) }
             ];
             
             let texts = []; let finalOptions = [];
@@ -199,7 +213,7 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             while(finalOptions.length < 4) {
                 let fakeP = (p1-p2) + getRandomInt(1, 3) * (Math.random() > 0.5 ? 1 : -1);
                 let altText = `\\( \\displaystyle ${formatFracAll(A*C, B*D, v1, fakeP, v2, q2-q1, "", 0)} \\)`;
-                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps)) }); }
+                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps)) }); }
             }
             qObj.options = shuffleArray(finalOptions).map((opt, idx) => ({...opt, id: String.fromCharCode(65 + idx)}));
 
@@ -244,20 +258,20 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let g3 = gcd(a_val, d_val); a_val /= g3; d_val /= g3;
                 let g4 = gcd(c_val, b_val); c_val /= g4; b_val /= g4;
 
-                let strA = getNumCancel(a, a_val, 'top');
-                let strB = getNumCancel(b, b_val, 'bottom');
-                let strC = getNumCancel(c, c_val, 'top');
-                let strD = getNumCancel(d, d_val, 'bottom');
+                let strA = getNumCancel(a, a_val, 'top', colNum);
+                let strB = getNumCancel(b, b_val, 'bottom', colNum);
+                let strC = getNumCancel(c, c_val, 'top', colNum);
+                let strD = getNumCancel(d, d_val, 'bottom', colNum);
 
                 let newQ1 = q1, newQ2 = q2;
                 if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
                 else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
                 else { newQ2 = 0; newQ1 = 0; }
-                let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+                let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV1);
+                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV1);
 
-                let strBStr_N = getPolyCancel(bStr, 1, 0, 'top');
-                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom');
+                let strBStr_N = getPolyCancel(bStr, 1, 0, 'top', colPol);
+                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom', colPol);
 
                 let stepN1 = joinNum(strA, strBStr_N);
                 let stepD1 = joinNum(strB, strV2_D);
@@ -278,11 +292,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let w2 = formatFracAll(a*d, b*c, v, 0, v2, q2-q1, "", 0); 
                 let w3 = formatFracAll(c, b*d, v, 0, v2, q2-q1, "", 0); 
                 
-                let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+                let eqCorrectHtml = wrapHintLocal(msgCorrect, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
-                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv1, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv1, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps))});
 
             } else { // 負號陷阱：(x-y) / (y-x) = -1
                 let n1Str = `${v} - ${k}`;
@@ -304,18 +318,18 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let b_val = b, c_val = c;
                 let g = gcd(b_val, c_val); b_val /= g; c_val /= g;
 
-                let strC = getNumCancel(c, c_val, 'top');
-                let strB = getNumCancel(b, b_val, 'bottom');
+                let strC = getNumCancel(c, c_val, 'top', colNum);
+                let strB = getNumCancel(b, b_val, 'bottom', colNum);
 
                 let newQ1 = q1, newQ2 = q2;
                 if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
                 else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
                 else { newQ2 = 0; newQ1 = 0; }
-                let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+                let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV1);
+                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV1);
 
-                let strBStr_N = getPolyCancel(bStr, 1, 0, 'top');
-                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom');
+                let strBStr_N = getPolyCancel(bStr, 1, 0, 'top', colPol);
+                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom', colPol);
 
                 let stepN1 = strBStr_N;
                 let stepD1 = joinNum(strB, strV2_D);
@@ -334,11 +348,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let w2 = formatFracAll(-c, b, v, 0, v2, q1+q2, "", 0); 
                 let w3 = formatFracAll(c, b, v, 0, v2, q1+q2, "", 0);
                 
-                let eqCorrectHtml = wrapHint(msgCorrect + `<div class='text-sm text-slate-500 mb-2 font-bold'>💡 技巧：${k} - ${v} 可以抽出負號變成 -(${v} - ${k})，然後互相約簡！</div>`, buildEq(steps));
+                let eqCorrectHtml = wrapHintLocal(msgCorrect + `<div class='text-sm text-slate-500 mb-2 font-bold'>💡 技巧：${k} - ${v} 可以抽出負號變成 -(${v} - ${k})，然後互相約簡！</div>`, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
-                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv3, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv3, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv3, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv3, buildEq(steps))});
             }
 
             let texts = []; let finalOptions = [];
@@ -346,7 +360,7 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             while(finalOptions.length < 4) {
                 let fakeC = c + getRandomInt(1, 4);
                 let altText = `\\( \\displaystyle ${formatFracAll(fakeC, b, v, 0, v2, q2-q1, "", 0)} \\)`;
-                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps)) }); }
+                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps)) }); }
             }
             qObj.options = shuffleArray(finalOptions).map((opt, idx) => ({...opt, id: String.fromCharCode(65 + idx)}));
 
@@ -389,18 +403,18 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let b_val = b, c_val = c;
                 let g = gcd(b_val, c_val); b_val /= g; c_val /= g;
 
-                let strC = getNumCancel(c, c_val, 'top');
-                let strB = getNumCancel(b, b_val, 'bottom');
+                let strC = getNumCancel(c, c_val, 'top', colNum);
+                let strB = getNumCancel(b, b_val, 'bottom', colNum);
 
                 let newQ1 = q1, newQ2 = q2;
                 if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
                 else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
                 else { newQ2 = 0; newQ1 = 0; }
-                let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+                let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV1);
+                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV1);
 
-                let strCancel_N = getPolyCancel(cancelStr, 1, 0, 'top');
-                let strCancel_D = getPolyCancel(cancelStr, 1, 0, 'bottom');
+                let strCancel_N = getPolyCancel(cancelStr, 1, 0, 'top', colPol);
+                let strCancel_D = getPolyCancel(cancelStr, 1, 0, 'bottom', colPol);
 
                 let stepN1;
                 if (sign > 0) {
@@ -425,11 +439,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, keepStr, 1);
                 let w3 = formatFracAll(c, b, v, 0, v2, q2-q1, "", 0); 
 
-                let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+                let eqCorrectHtml = wrapHintLocal(msgCorrect, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
-                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps))});
 
             } else { // 完全平方公式
                 let k = getRandomInt(2, 6);
@@ -457,18 +471,19 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let b_val = b, c_val = c;
                 let g = gcd(b_val, c_val); b_val /= g; c_val /= g;
 
-                let strC = getNumCancel(c, c_val, 'top');
-                let strB = getNumCancel(b, b_val, 'bottom');
+                let strC = getNumCancel(c, c_val, 'top', colNum);
+                let strB = getNumCancel(b, b_val, 'bottom', colNum);
 
                 let newQ1 = q1, newQ2 = q2;
                 if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
                 else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
                 else { newQ2 = 0; newQ1 = 0; }
-                let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+                let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV1);
+                let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV1);
 
-                let strBStr_N = getPolyCancel(bStr, 2, 1, 'top'); // 畫掉 2 次方
-                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom'); // 畫掉整個底數
+                // 🌟 只劃掉平方的 2 次方，保留底數
+                let strBStr_N = getPolyCancel(bStr, 2, 1, 'top', colPol);
+                let strBStr_D = getPolyCancel(bStr, 1, 0, 'bottom', colPol);
 
                 let stepN1 = strBStr_N;
                 let stepD1 = joinNum(strB, strV2_D);
@@ -487,11 +502,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, bStr, 1);
                 let w3 = formatFracAll(-c, b, v, 0, v2, q2-q1, bStr, 1); 
 
-                let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+                let eqCorrectHtml = wrapHintLocal(msgCorrect, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
-                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
-                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
+                options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
             }
 
             let texts = []; let finalOptions = [];
@@ -499,7 +514,7 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             while(finalOptions.length < 4) {
                 let fakeC = c + getRandomInt(1, 4);
                 let altText = `\\( \\displaystyle ${formatFracAll(fakeC, b, v, 0, v2, q2-q1, "", 0)} \\)`;
-                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps)) }); }
+                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps)) }); }
             }
             qObj.options = shuffleArray(finalOptions).map((opt, idx) => ({...opt, id: String.fromCharCode(65 + idx)}));
 
@@ -553,18 +568,18 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             let b_val = b, c_val = c;
             let g = gcd(b_val, c_val); b_val /= g; c_val /= g;
 
-            let strC = getNumCancel(c, c_val, 'top');
-            let strB = getNumCancel(b, b_val, 'bottom');
+            let strC = getNumCancel(c, c_val, 'top', colNum);
+            let strB = getNumCancel(b, b_val, 'bottom', colNum);
 
             let newQ1 = q1, newQ2 = q2;
             if (q2 > q1) { newQ2 = q2 - q1; newQ1 = 0; }
             else if (q2 < q1) { newQ2 = 0; newQ1 = q1 - q2; }
             else { newQ2 = 0; newQ1 = 0; }
-            let strV2_N = getVarCancel(v2, q2, newQ2, 'top');
-            let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom');
+            let strV2_N = getVarCancel(v2, q2, newQ2, 'top', colV1);
+            let strV2_D = getVarCancel(v2, q1, newQ1, 'bottom', colV1);
 
-            let strCancel_N = getPolyCancel(cancelStr, 1, 0, 'top');
-            let strCancel_D = getPolyCancel(cancelStr, 1, 0, 'bottom');
+            let strCancel_N = getPolyCancel(cancelStr, 1, 0, 'top', colPol);
+            let strCancel_D = getPolyCancel(cancelStr, 1, 0, 'bottom', colPol);
 
             let stepN1 = joinNum(strCancel_N, keepStr); 
             let stepD1 = joinNum(strB, strV2_D);
@@ -583,18 +598,18 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, keepStr, 1);
             let w3 = formatFracAll(-c, b, v, 0, v2, q2-q1, keepStr, 1); 
 
-            let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
+            let eqCorrectHtml = wrapHintLocal(msgCorrect, buildEq(steps));
             options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
-            options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps))});
-            options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
-            options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv2, buildEq(steps))});
+            options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps))});
+            options.push({text: `\\( \\displaystyle ${w2} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
+            options.push({text: `\\( \\displaystyle ${w3} \\)`, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv2, buildEq(steps))});
             
             let texts = []; let finalOptions = [];
             options.forEach(opt => { if (!texts.includes(opt.text)) { texts.push(opt.text); finalOptions.push(opt); } });
             while(finalOptions.length < 4) {
                 let fakeC = c + getRandomInt(1, 4);
                 let altText = `\\( \\displaystyle ${formatFracAll(fakeC, b, v, 0, v2, q2-q1, "", 0)} \\)`;
-                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHint(msgFracMulDiv4, buildEq(steps)) }); }
+                if (!texts.includes(altText)) { texts.push(altText); finalOptions.push({ text: altText, isCorrect: false, hint: wrapHintLocal(msgFracMulDiv4, buildEq(steps)) }); }
             }
             qObj.options = shuffleArray(finalOptions).map((opt, idx) => ({...opt, id: String.fromCharCode(65 + idx)}));
         }
