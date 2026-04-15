@@ -8,12 +8,37 @@ const msgFracMulDiv2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 指
 const msgFracMulDiv3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 忘記變號：(x-y) 與 (y-x) 約簡應為 -1</div>`;
 const msgFracMulDiv4 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 因式分解未完全或錯誤</div>`;
 
-// 🌟 輔助函數：產生紅線約簡 KaTeX (對應圖片中的紅線畫去)
-const cancelTerm = (str) => `\\color{red}{\\cancel{\\color{black}{${str}}}}`;
-const cancelPwr = (str, pwr) => `${str}^{\\color{red}{\\cancel{\\color{black}{${pwr}}}}}`;
+// ==========================================
+// 🌟 多彩紅線約簡 (對應圖片中的多色紅線畫去)
+// ==========================================
+const colors = ['#ef4444', '#3b82f6', '#16a34a', '#f97316', '#a855f7']; // 紅, 藍, 綠, 橘, 紫
+
+// 畫掉整個項 (例如括號或完全消去的變數)
+const cancelTerm = (str, color = '#ef4444') => `\\color{${color}}{\\cancel{\\color{black}{${str}}}}`;
+
+// 畫掉次方數 (保留底數，例如消去平方變成一次方)
+const cancelPwr = (str, oldPwr, newPwr = '', color = '#ef4444') => {
+    if (newPwr === '') {
+        return `${str}^{\\color{${color}}{\\cancel{\\color{black}{${oldPwr}}}}}`;
+    } else {
+        return `${str}^{\\overset{\\color{${color}}{${newPwr}}}{\\color{${color}}{\\cancel{\\color{black}{${oldPwr}}}}}}`;
+    }
+};
+
+// 畫掉分子數字，並在上方寫上新數字 (若為 1 則直接消去不寫數字)
+const cancelNum = (oldNum, newNum, color = '#ef4444') => {
+    if (newNum === 1 || newNum === -1) return `\\color{${color}}{\\cancel{\\color{black}{${oldNum}}}}`;
+    return `\\overset{\\color{${color}}{${newNum}}}{\\color{${color}}{\\cancel{\\color{black}{${oldNum}}}}}`;
+};
+
+// 畫掉分母數字，並在下方寫上新數字
+const cancelNumDen = (oldNum, newNum, color = '#ef4444') => {
+    if (newNum === 1 || newNum === -1) return `\\color{${color}}{\\cancel{\\color{black}{${oldNum}}}}`;
+    return `\\underset{\\color{${color}}{${newNum}}}{\\color{${color}}{\\cancel{\\color{black}{${oldNum}}}}}`;
+};
 
 // ==========================================
-// 專用強大分數排版工具
+// 專用強大分數排版工具 (用於最終答案顯示)
 // ==========================================
 function formatFracAll(numC, denC, v1, p1, v2, p2, bStr, pb) {
     let g = gcd(numC, denC);
@@ -26,19 +51,15 @@ function formatFracAll(numC, denC, v1, p1, v2, p2, bStr, pb) {
     let numTerms = [];
     let denTerms = [];
 
-    // 處理數字係數
     if (nC !== 1) numTerms.push(nC);
     if (dC !== 1) denTerms.push(dC);
 
-    // 處理第一變數
     if (p1 > 0) numTerms.push(p1 === 1 ? v1 : `${v1}^{${p1}}`);
     if (p1 < 0) denTerms.push(p1 === -1 ? v1 : `${v1}^{${-p1}}`);
 
-    // 處理第二變數
     if (p2 > 0) numTerms.push(p2 === 1 ? v2 : `${v2}^{${p2}}`);
     if (p2 < 0) denTerms.push(p2 === -1 ? v2 : `${v2}^{${-p2}}`);
 
-    // 處理括號因式
     if (pb > 0) numTerms.push(pb === 1 ? bStr : `${bStr}^{${pb}}`);
     if (pb < 0) denTerms.push(pb === -1 ? bStr : `${bStr}^{${-pb}}`);
 
@@ -88,13 +109,11 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             let n2Str, d2Str, cNum, cDen, cP, cQ;
 
             if (isDiv) {
-                // 除法：除以 (D x^p2 / C y^q2) -> 乘上 (C y^q2 / D x^p2)
                 n2Str = `${D}${v1}^{${p2}}`;
                 d2Str = `${C}${v2}^{${q2}}`;
                 cNum = A * C; cDen = B * D;
                 cP = p1 - p2; cQ = q2 - q1;
             } else {
-                // 乘法：乘上 (C y^q2 / D x^p2)
                 n2Str = `${C}${v2}^{${q2}}`;
                 d2Str = `${D}${v1}^{${p2}}`;
                 cNum = A * C; cDen = B * D;
@@ -106,7 +125,56 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
 
             let steps = [{text: questionMathStr, hide: false}];
             if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${C}${v2}^{${q2}}}{${D}${v1}^{${p2}}}`, hide: false});
-            steps.push({text: `\\frac{${A*C}${v1}^{${p1}}${v2}^{${q2}}}{${B*D}${v1}^{${p2}}${v2}^{${q1}}}`, hide: true});
+            
+            // 🌟 合併分數並產生彩色約簡步驟
+            let numC = A * C;
+            let denC = B * D;
+            let gNum = gcd(numC, denC);
+            
+            let cNumStr = numC;
+            let cDenStr = denC;
+            let colorIdx = 0;
+            
+            if (gNum > 1) {
+                cNumStr = cancelNum(numC, numC / gNum, colors[colorIdx % colors.length]);
+                cDenStr = cancelNumDen(denC, denC / gNum, colors[colorIdx % colors.length]);
+                colorIdx++;
+            }
+            
+            let cv1Num = p1 === 1 ? v1 : `${v1}^{${p1}}`;
+            let cv1Den = p2 === 1 ? v1 : `${v1}^{${p2}}`;
+            if (p1 > p2) {
+                cv1Num = cancelPwr(v1, p1, p1 - p2 === 1 ? '' : p1 - p2, colors[colorIdx % colors.length]);
+                cv1Den = cancelTerm(cv1Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (p1 < p2) {
+                cv1Num = cancelTerm(cv1Num, colors[colorIdx % colors.length]);
+                cv1Den = cancelPwr(v1, p2, p2 - p1 === 1 ? '' : p2 - p1, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (p1 === p2) {
+                cv1Num = cancelTerm(cv1Num, colors[colorIdx % colors.length]);
+                cv1Den = cancelTerm(cv1Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            }
+            
+            let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+            let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+            if (q2 > q1) {
+                cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (q2 < q1) {
+                cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (q2 === q1) {
+                cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            }
+            
+            steps.push({text: `\\frac{${numC}${v1}^{${p1}}${v2}^{${q2}}}{${denC}${v1}^{${p2}}${v2}^{${q1}}}`, hide: false});
+            steps.push({text: `\\frac{${cNumStr}${cv1Num}${cv2Num}}{${cDenStr}${cv1Den}${cv2Den}}`, hide: false});
             steps.push({text: correctStr, hide: false});
 
             let eqCorrectHtml = wrapHint(msgCorrect, buildEq(steps));
@@ -165,9 +233,42 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
                 steps.push({text: `\\frac{${a}${bStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d}${bStr}}`, hide: false});
                 
-                // 🌟 新增：清楚顯示紅線約簡 (Cancellation)
-                steps.push({text: `\\frac{${a}${cancelTerm(bStr)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${d}${cancelTerm(bStr)}}`, hide: false});
+                // 🌟 彩色約簡引擎
+                let numC = a * c;
+                let denC = b * d;
+                let gNum = gcd(numC, denC);
+                let cNumStr = numC;
+                let cDenStr = denC;
+                let colorIdx = 0;
                 
+                if (gNum > 1) {
+                    cNumStr = cancelNum(numC, numC / gNum, colors[colorIdx % colors.length]);
+                    cDenStr = cancelNumDen(denC, denC / gNum, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+                
+                let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+                let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+                if (q2 > q1) {
+                    cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 < q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 === q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+                
+                let cBStrNum = cancelTerm(bStr, colors[colorIdx % colors.length]);
+                let cBStrDen = cancelTerm(bStr, colors[colorIdx % colors.length]);
+                colorIdx++;
+
+                steps.push({text: `\\frac{${numC}${q2===1?v2:v2+'^{'+q2+'}'}${bStr}}{${denC}${q1===1?v2:v2+'^{'+q1+'}'}${bStr}}`, hide: false});
+                steps.push({text: `\\frac{${cNumStr}${cv2Num}${cBStrNum}}{${cDenStr}${cv2Den}${cBStrDen}}`, hide: false});
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(a*c, b*d, v, 0, v2, q1+q2, "", 0);
@@ -197,16 +298,53 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
                 steps.push({text: `\\frac{${bStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{-${bStr}}`, hide: false});
                 
-                // 🌟 新增：清楚顯示紅線約簡 (Cancellation)
-                steps.push({text: `\\frac{${cancelTerm(bStr)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{-${cancelTerm(bStr)}}`, hide: false});
+                // 🌟 彩色約簡引擎 (負號陷阱保留負號)
+                let numC = c;
+                let denC = b; 
+                let gNum = gcd(c, b);
+                let cNumStr = c;
+                let cDenStr = `-${b}`;
+                let colorIdx = 0;
                 
+                if (gNum > 1) {
+                    cNumStr = cancelNum(c, c / gNum, colors[colorIdx % colors.length]);
+                    let newDen = -b / gNum;
+                    if (newDen === -1) {
+                        cDenStr = `- \\color{${colors[colorIdx % colors.length]}}{\\cancel{\\color{black}{${b}}}}`; 
+                    } else {
+                        cDenStr = `\\underset{\\color{${colors[colorIdx % colors.length]}}{${newDen}}}{\\color{${colors[colorIdx % colors.length]}}{\\cancel{\\color{black}{-${b}}}}}`;
+                    }
+                    colorIdx++;
+                }
+                
+                let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+                let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+                if (q2 > q1) {
+                    cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 < q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 === q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+                
+                let cBStrNum = cancelTerm(bStr, colors[colorIdx % colors.length]);
+                let cBStrDen = cancelTerm(bStr, colors[colorIdx % colors.length]);
+                colorIdx++;
+
+                steps.push({text: `\\frac{${c}${q2===1?v2:v2+'^{'+q2+'}'}${bStr}}{-${b}${q1===1?v2:v2+'^{'+q1+'}'}${bStr}}`, hide: false});
+                steps.push({text: `\\frac{${cNumStr}${cv2Num}${cBStrNum}}{${cDenStr}${cv2Den}${cBStrDen}}`, hide: false});
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, "", 0); 
                 let w2 = formatFracAll(-c, b, v, 0, v2, q1+q2, "", 0); 
                 let w3 = formatFracAll(c, b, v, 0, v2, q1+q2, "", 0);
                 
-                // 特別解釋抽出負號的技巧
                 let eqCorrectHtml = wrapHint(msgCorrect + `<div class='text-sm text-slate-500 mb-2 font-bold'>💡 技巧：${k} - ${v} 可以抽出負號變成 -(${v} - ${k})，然後互相約簡！</div>`, buildEq(steps));
                 options.push({text: `\\( \\displaystyle ${correctStr} \\)`, isCorrect: true, hint: eqCorrectHtml});
                 options.push({text: `\\( \\displaystyle ${w1} \\)`, isCorrect: false, hint: wrapHint(msgFracMulDiv3, buildEq(steps))});
@@ -261,10 +399,47 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 let factoredN1 = `(${v}-${k})(${v}+${k})`;
                 steps.push({text: `\\frac{${factoredN1}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelStr}}`, hide: false});
                 
-                // 🌟 新增：清楚顯示紅線約簡
-                let canceledN1 = sign > 0 ? `(${v}-${k})${cancelTerm(cancelStr)}` : `${cancelTerm(cancelStr)}(${v}+${k})`;
-                steps.push({text: `\\frac{${canceledN1}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(cancelStr)}}`, hide: false});
+                // 🌟 彩色約簡引擎
+                let numC = c;
+                let denC = b;
+                let gNum = gcd(numC, denC);
+                let cNumStr = c;
+                let cDenStr = b;
+                let colorIdx = 0;
                 
+                if (gNum > 1) {
+                    cNumStr = cancelNum(numC, numC / gNum, colors[colorIdx % colors.length]);
+                    cDenStr = cancelNumDen(denC, denC / gNum, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+                
+                let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+                let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+                if (q2 > q1) {
+                    cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 < q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 === q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+
+                let cCancelNum = cancelTerm(cancelStr, colors[colorIdx % colors.length]);
+                let cCancelDen = cancelTerm(cancelStr, colors[colorIdx % colors.length]);
+                colorIdx++;
+
+                let combinedNum = `${c}${q2===1?v2:v2+'^{'+q2+'}'}${sign > 0 ? keepStr + cancelStr : cancelStr + keepStr}`;
+                let combinedDen = `${b}${q1===1?v2:v2+'^{'+q1+'}'}${cancelStr}`;
+                steps.push({text: `\\frac{${combinedNum}}{${combinedDen}}`, hide: false});
+
+                let coloredNum = `${cNumStr}${cv2Num}${sign > 0 ? keepStr + cCancelNum : cCancelNum + keepStr}`;
+                let coloredDen = `${cDenStr}${cv2Den}${cCancelDen}`;
+                steps.push({text: `\\frac{${coloredNum}}{${coloredDen}}`, hide: false});
                 steps.push({text: correctStr, hide: false});
 
                 let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${sign > 0 ? '+' : '-'} ${k})`, 1); // 留錯括號
@@ -302,12 +477,50 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
                 if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
                 steps.push({text: `\\frac{${bStr}^2}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${bStr}}`, hide: false});
                 
-                // 🌟 新增：清楚顯示紅線約簡 (對應圖片：劃掉 2 次方)
-                steps.push({text: `\\frac{${cancelPwr(bStr, 2)}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(bStr)}}`, hide: false});
+                // 🌟 彩色約簡引擎 (對應圖片：保留底數，劃掉 2 次方)
+                let numC = c;
+                let denC = b;
+                let gNum = gcd(numC, denC);
+                let cNumStr = c;
+                let cDenStr = b;
+                let colorIdx = 0;
                 
+                if (gNum > 1) {
+                    cNumStr = cancelNum(numC, numC / gNum, colors[colorIdx % colors.length]);
+                    cDenStr = cancelNumDen(denC, denC / gNum, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+                
+                let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+                let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+                if (q2 > q1) {
+                    cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 < q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                } else if (q2 === q1) {
+                    cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                    cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                    colorIdx++;
+                }
+
+                let cCancelNum = cancelPwr(bStr, 2, '', colors[colorIdx % colors.length]);
+                let cCancelDen = cancelTerm(bStr, colors[colorIdx % colors.length]);
+                colorIdx++;
+
+                let combinedNum = `${c}${q2===1?v2:v2+'^{'+q2+'}'}${bStr}^2`;
+                let combinedDen = `${b}${q1===1?v2:v2+'^{'+q1+'}'}${bStr}`;
+                steps.push({text: `\\frac{${combinedNum}}{${combinedDen}}`, hide: false});
+
+                let coloredNum = `${cNumStr}${cv2Num}${cCancelNum}`;
+                let coloredDen = `${cDenStr}${cv2Den}${cCancelDen}`;
+                steps.push({text: `\\frac{${coloredNum}}{${coloredDen}}`, hide: false});
                 steps.push({text: correctStr, hide: false});
 
-                let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${sign > 0 ? '-' : '+'} ${k})`, 1); // 留錯括號
+                let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${sign > 0 ? '-' : '+'} ${k})`, 1); 
                 let w2 = formatFracAll(c, b, v, 0, v2, q1+q2, bStr, 1);
                 let w3 = formatFracAll(-c, b, v, 0, v2, q2-q1, bStr, 1); 
 
@@ -376,9 +589,47 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
             if (isDiv) steps.push({text: `\\frac{${n1Str}}{${d1Str}} \\times \\frac{${n2Raw}}{${d2Raw}}`, hide: false});
             steps.push({text: `\\frac{${cancelStr}${keepStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelStr}}`, hide: false});
             
-            // 🌟 新增：清楚顯示紅線約簡
-            steps.push({text: `\\frac{${cancelTerm(cancelStr)}${keepStr}}{${b}${v2}^{${q1}}} \\times \\frac{${c}${v2}^{${q2}}}{${cancelTerm(cancelStr)}}`, hide: false});
+            // 🌟 彩色約簡引擎
+            let numC = c;
+            let denC = b;
+            let gNum = gcd(numC, denC);
+            let cNumStr = c;
+            let cDenStr = b;
+            let colorIdx = 0;
             
+            if (gNum > 1) {
+                cNumStr = cancelNum(numC, numC / gNum, colors[colorIdx % colors.length]);
+                cDenStr = cancelNumDen(denC, denC / gNum, colors[colorIdx % colors.length]);
+                colorIdx++;
+            }
+            
+            let cv2Num = q2 === 1 ? v2 : `${v2}^{${q2}}`;
+            let cv2Den = q1 === 1 ? v2 : `${v2}^{${q1}}`;
+            if (q2 > q1) {
+                cv2Num = cancelPwr(v2, q2, q2 - q1 === 1 ? '' : q2 - q1, colors[colorIdx % colors.length]);
+                cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (q2 < q1) {
+                cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                cv2Den = cancelPwr(v2, q1, q1 - q2 === 1 ? '' : q1 - q2, colors[colorIdx % colors.length]);
+                colorIdx++;
+            } else if (q2 === q1) {
+                cv2Num = cancelTerm(cv2Num, colors[colorIdx % colors.length]);
+                cv2Den = cancelTerm(cv2Den, colors[colorIdx % colors.length]);
+                colorIdx++;
+            }
+
+            let cCancelNum = cancelTerm(cancelStr, colors[colorIdx % colors.length]);
+            let cCancelDen = cancelTerm(cancelStr, colors[colorIdx % colors.length]);
+            colorIdx++;
+
+            let combinedNum = `${c}${q2===1?v2:v2+'^{'+q2+'}'}${cancelStr}${keepStr}`;
+            let combinedDen = `${b}${q1===1?v2:v2+'^{'+q1+'}'}${cancelStr}`;
+            steps.push({text: `\\frac{${combinedNum}}{${combinedDen}}`, hide: false});
+
+            let coloredNum = `${cNumStr}${cv2Num}${cCancelNum}${keepStr}`;
+            let coloredDen = `${cDenStr}${cv2Den}${cCancelDen}`;
+            steps.push({text: `\\frac{${coloredNum}}{${coloredDen}}`, hide: false});
             steps.push({text: correctStr, hide: false});
 
             let w1 = formatFracAll(c, b, v, 0, v2, q2-q1, `(${v} ${m > 0 ? '+' : '-'} ${Math.abs(m)})`, 1); // 留錯括號
