@@ -35,6 +35,13 @@
         .math-scroll::-webkit-scrollbar { display: none; }
         
         details > summary::-webkit-details-marker { display: none; }
+
+        /* 避免在手機上畫畫時畫面跟著捲動 */
+        #draw-canvas {
+            touch-action: none;
+            background-color: white;
+            cursor: crosshair;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-800 py-6 px-2 sm:px-4">
@@ -51,12 +58,12 @@
                         </svg>
                     </div>
                     <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">DSE無限修練所</h1>
-                    </div>
+                </div>
 
                 <!-- 🎁 獎勵機制說明 -->
                 <div class="max-w-3xl mx-auto mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 sm:p-6 shadow-sm text-left">
                     <p class="text-sm sm:text-base text-amber-700 leading-relaxed">
-                        每天刷題<strong class="text-red-500 mx-1">無次數限制</strong>！只要不斷挑戰累積積分，<strong class="text-red-500 mx-1">每累積滿 100 分</strong>即可解鎖一張專屬刮刮卡，隨機抽取<strong class="text-red-500 mx-1">印賞卡、Mcdonald、零食、飲品、文具！</strong> 快來挑戰吧！
+                        每天刷題<strong class="text-red-600 mx-1">無次數限制</strong>！只要不斷挑戰累積積分，<strong class="text-red-600 mx-1">每累積滿 100 分</strong>即可解鎖一張專屬刮刮卡，隨機抽取<strong class="text-red-600 mx-1">印賞卡、Mcdonald、零食、飲品、文具！</strong> 快來挑戰吧！
                     </p>
                 </div>
 
@@ -92,8 +99,11 @@
                     <button onclick="selectTopic('expansion')" class="py-5 px-2 border-2 border-slate-200 rounded-xl hover:border-rose-500 hover:bg-rose-50 transition-all group shadow-sm flex justify-center items-center text-center bg-white min-h-[70px]">
                         <div class="text-sm sm:text-base font-bold text-slate-700 group-hover:text-rose-700 leading-tight">恆等式的展開</div>
                     </button>
-                    <button onclick="selectTopic('alg_frac_mul_div')" class="py-5 px-2 border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all group shadow-sm flex justify-center items-center text-center bg-white min-h-[70px] sm:col-span-2 md:col-span-1">
-                        <div class="text-sm sm:text-base font-bold text-slate-700 group-hover:text-amber-700 leading-tight">第5.2章 代數分式乘除法</div>
+                    <button onclick="selectTopic('alg_frac_mul_div')" class="py-5 px-2 border-2 border-slate-200 rounded-xl hover:border-amber-500 hover:bg-amber-50 transition-all group shadow-sm flex justify-center items-center text-center bg-white min-h-[70px]">
+                        <div class="text-sm sm:text-base font-bold text-slate-700 group-hover:text-amber-700 leading-tight">代數分式乘除法</div>
+                    </button>
+                    <button onclick="selectTopic('triangle_area')" class="py-5 px-2 border-2 border-slate-200 rounded-xl hover:border-lime-500 hover:bg-lime-50 transition-all group shadow-sm flex justify-center items-center text-center bg-white min-h-[70px]">
+                        <div class="text-sm sm:text-base font-bold text-slate-700 group-hover:text-lime-700 leading-tight">三角形面積</div>
                     </button>
                 </div>
 
@@ -213,9 +223,32 @@
                         </div>
                     </div>
 
+                    <!-- 選項作答區塊 (預設顯示於 MC 題) -->
                     <div id="optionsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"></div>
 
-                    <div id="feedbackArea" class="mt-4 hidden animate-fade-in">
+                    <!-- 🌟 手寫作答區塊 (預設隱藏，於手寫題時顯示) 🌟 -->
+                    <div id="handwritingArea" class="hidden flex-col gap-4 w-full mt-2">
+                        <div class="bg-white rounded-xl shadow-inner border-2 border-indigo-200 overflow-hidden relative h-[250px] sm:h-[350px] w-full transition-all">
+                            <canvas id="draw-canvas" class="w-full h-full absolute inset-0"></canvas>
+                            <!-- AI 載入中覆蓋層 -->
+                            <div id="ai-loading" class="hidden absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10">
+                                <svg class="animate-spin h-10 w-10 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <p class="text-indigo-700 font-bold text-center px-4">AI 老師正在批改你的筆跡...<br><span class="text-sm font-normal text-slate-500">這可能需要幾秒鐘</span></p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <button id="clear-btn" class="px-4 py-2 sm:px-5 sm:py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-colors flex items-center text-sm sm:text-base shadow-sm">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                清除白板
+                            </button>
+                            <button id="recognize-btn" class="px-5 py-2 sm:px-6 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition-colors flex items-center text-sm sm:text-base">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                AI 批改
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="feedbackArea" class="mt-6 hidden animate-fade-in">
                         <div id="feedbackBox" class="p-4 rounded-xl border w-full overflow-hidden">
                             <div id="feedbackMessage" class="text-slate-700 w-full overflow-x-auto math-scroll"></div>
                             <button id="nextBtn" class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors hidden w-full sm:w-auto">
@@ -314,28 +347,29 @@
     </div>
 
     <div class="fixed bottom-3 left-3 text-slate-400 font-medium text-sm z-50">
-        版本：V71 (強制破除快取版)
+        版本：V73 (強制破除快取版)
     </div>
 
     <!-- ========================================== -->
-    <!-- 引入外部 JS 檔案 (加入 ?v=71 強制抓取最新代碼) -->
+    <!-- 引入外部 JS 檔案 (加入 ?v=73 強制抓取最新代碼) -->
     <!-- ========================================== -->
     
     <!-- 1. 核心工具 -->
-    <script src="js/utils.js?v=71"></script>
+    <script src="js/utils.js?v=73"></script>
 
     <!-- 2. 各單元題庫 -->
-    <script src="js/topics/indices.js?v=71"></script>
-    <script src="js/topics/factorization.js?v=71"></script>
-    <script src="js/topics/rounding.js?v=71"></script>
-    <script src="js/topics/identities.js?v=71"></script>
-    <script src="js/topics/fractions.js?v=71"></script>
-    <script src="js/topics/binary.js?v=71"></script>
-    <script src="js/topics/expansion.js?v=71"></script>
-    <script src="js/topics/algebraic_fractions_mul_div.js?v=71"></script>
+    <script src="js/topics/indices.js?v=73"></script>
+    <script src="js/topics/factorization.js?v=73"></script>
+    <script src="js/topics/rounding.js?v=73"></script>
+    <script src="js/topics/identities.js?v=73"></script>
+    <script src="js/topics/fractions.js?v=73"></script>
+    <script src="js/topics/binary.js?v=73"></script>
+    <script src="js/topics/expansion.js?v=73"></script>
+    <script src="js/topics/algebraic_fractions_mul_div.js?v=73"></script>
+    <script src="js/topics/triangle_area.js?v=74"></script>
 
-    <!-- 3. 主程式邏輯 (進度條核心) -->
-    <script src="js/app.js?v=71"></script>
+    <!-- 3. 主程式邏輯 (進度條 + 手寫AI核心) -->
+    <script src="js/app.js?v=74"></script>
 
 </body>
 </html>
