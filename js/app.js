@@ -10,7 +10,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_h7rVev1VtA
 const CLOUDFLARE_WORKER_URL = "falling-field-afc7.chanchakw-csjss.workers.dev";
 
 // 🟢 開啟 AI 手寫功能
-const ENABLE_AI_HANDWRITING = true; 
+const ENABLE_AI_HANDWRITING = false; 
 
 const motivationalQuotes = [
     "未來的你，必定感激今天努力的自己。", "默默耕耘，總有收穫。", "答應自己，每天堅持多 1 分鐘。", "今天的累積，是明天的底氣。"
