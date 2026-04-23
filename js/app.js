@@ -1,6 +1,6 @@
 // js/app.js
 
-console.log("App.js V60 成功載入！已啟動最高級別數位簽章防篡改系統！");
+console.log("App.js V61 成功載入！已啟動最高級別數位簽章防篡改系統，並修復了零分誤判！");
 
 // ==========================================
 // 🚨 老師設定區
@@ -386,7 +386,7 @@ window.skipQuestion = function() {
     let q = questionBank[currentQuestionIndex];
     if(!q) return;
     
-    attemptsCount = 2; // 強制標記為已失敗兩次
+    attemptsCount = 2; 
     
     showFeedback('incorrect', `<div class="mb-4 text-orange-600 font-bold text-lg sm:text-xl bg-orange-50 p-3 rounded-lg border border-orange-200 shadow-sm">⏭️ 你已選擇跳過本題 (獲得 0 分)</div>`, true); 
     
@@ -444,7 +444,7 @@ function loadQuestion() {
     
     if (q.isHandwriting) {
         optionsGrid?.classList.add('hidden');
-        skipBtnMC?.classList.add('hidden'); 
+        if (skipBtnMC) skipBtnMC.classList.add('hidden'); 
         
         if (hwArea) {
             hwArea.classList.remove('hidden');
@@ -465,7 +465,7 @@ function loadQuestion() {
         }
     } else {
         optionsGrid?.classList.remove('hidden');
-        skipBtnMC?.classList.remove('hidden'); 
+        if (skipBtnMC) skipBtnMC.classList.remove('hidden'); 
         
         if (hwArea) hwArea.classList.add('hidden');
         if (optionsGrid) {
@@ -954,7 +954,6 @@ function submitToGoogleSheet() {
     
     if (!classNameEl || !classNumberEl || !studentNameEl || !statusText || !btn) return;
 
-    // 🌟 班別輸入強制轉大寫
     const className = classNameEl.value.trim().toUpperCase();
     const classNumber = classNumberEl.value.trim();
     const studentName = studentNameEl.value.trim();
@@ -973,10 +972,13 @@ function submitToGoogleSheet() {
     let percentageVal = ((score / totalScoreVal) * 100).toFixed(0) + "%";
 
     // ====================================================================
-    // 🔐 終極加密防禦：產生與伺服器匹配的數位簽章
+    // 🔐 V61 終極加密防禦：強制將分數轉為字串進行加密，消滅型別錯誤
     // ====================================================================
+    const rawScoreStr = String(score).trim();
+    const rawTotalScoreStr = String(totalScoreVal).trim();
     const saltKey = "DseMath@2026_HK_Secure!";
-    const rawString = className + "|" + classNumber + "|" + score + "|" + totalScoreVal + "|" + saltKey;
+    
+    const rawString = className + "|" + classNumber + "|" + rawScoreStr + "|" + rawTotalScoreStr + "|" + saltKey;
     let hashVal = 0;
     for (let i = 0; i < rawString.length; i++) {
         hashVal = ((hashVal << 5) - hashVal) + rawString.charCodeAt(i);
@@ -994,7 +996,7 @@ function submitToGoogleSheet() {
     formData.append('score', score);
     formData.append('totalScore', totalScoreVal); 
     formData.append('percentage', percentageVal);
-    formData.append('sig', signature); // 🌟 傳送加密簽章給伺服器驗證
+    formData.append('sig', signature); 
 
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData })
         .then(response => response.json())
@@ -1093,7 +1095,7 @@ function renderMath() {
 window.setQuestionNum = setQuestionNum; window.showTopicScreen = showTopicScreen; window.backToLevelSelection = backToLevelSelection; window.backToLevelSelectionFromQuiz = backToLevelSelectionFromQuiz; window.closeConfirmModal = closeConfirmModal; window.confirmBackToLevelSelection = confirmBackToLevelSelection; window.selectTopic = selectTopic; window.startGame = startGame; window.startGlobalMixed = startGlobalMixed; window.submitToGoogleSheet = submitToGoogleSheet;
 
 document.addEventListener('DOMContentLoaded', () => { 
-    console.log("🚀 App.js V60 初始化執行... DOM 載入完成，已啟動終極加密防禦與多重跳過按鈕支援！");
+    console.log("🚀 App.js V61 初始化執行... DOM 載入完成，已啟動終極加密防禦與多重跳過按鈕支援！");
     showTopicScreen(); fetchConfig(); setInterval(() => fetchConfig(true), 5000); 
     const savedClass = getStoredData('dse_className'); const savedNum = getStoredData('dse_classNumber'); const savedName = getStoredData('dse_studentName');
     const classNameEl = document.getElementById('className'); if (classNameEl && savedClass) classNameEl.value = savedClass; 
