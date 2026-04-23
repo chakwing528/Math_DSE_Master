@@ -1,6 +1,6 @@
 // js/app.js
 
-console.log("App.js V63.2 成功載入！已啟動雙軌制功課派發系統與進階偵錯雷達！");
+console.log("App.js V63.3 成功載入！已更新功課版面常駐、日期顯示、均為10分及隨時可跳過本題功能！");
 
 // ==========================================
 // 🚨 老師設定區
@@ -41,7 +41,7 @@ let globalLeaderboard = [];
 let currentLeaderboardHash = ""; 
 let isFetchingLock = false; 
 
-// 🌟 V62 新增：功課系統與追蹤器變數
+// 🌟 功課系統與追蹤器變數
 let isHomeworkMode = false;
 let currentHomeworkName = "";
 let dynamicHomeworkConfig = [];
@@ -60,7 +60,7 @@ async function fetchConfig(isSilent = false) {
             const response = await fetch(cacheBusterUrl);
             const data = await response.json();
             
-            console.log("📥 從伺服器收到的 JSON 資料：", data); // 🌟 協助排錯用
+            console.log("📥 從伺服器收到的 JSON 資料：", data);
             
             if (data && data.leaderboard) {
                 const newHash = JSON.stringify(data.leaderboard);
@@ -77,14 +77,9 @@ async function fetchConfig(isSilent = false) {
             if (data.topicConfig) dynamicTopicConfig = data.topicConfig;
             if (data.quotes) dynamicQuotes = data.quotes;
             
-            // 🌟 接收並渲染功課清單
-            if (data.homeworkConfig && data.homeworkConfig.length > 0) {
-                console.log("✅ 成功獲取功課設定：", data.homeworkConfig);
+            // 接收並渲染功課清單
+            if (data.homeworkConfig) {
                 dynamicHomeworkConfig = data.homeworkConfig;
-                renderHomeworkButtons();
-            } else {
-                console.warn("⚠️ 伺服器回傳的功課清單為空！請檢查：\n1. Google Apps Script 是否已部署「新版本」。\n2. Google Sheet 是否有名為「功課設定表」的分頁，且裡面有資料。");
-                dynamicHomeworkConfig = [];
                 renderHomeworkButtons();
             }
         }
@@ -98,21 +93,36 @@ async function fetchConfig(isSilent = false) {
     }
 }
 
-// 🌟 新增：將功課按鈕渲染到首頁
+// 🌟 修改：將功課按鈕渲染到首頁 (功課區塊常駐，且顯示日期)
 function renderHomeworkButtons() {
     const hwSection = document.getElementById('homeworkSection');
     const hwGrid = document.getElementById('homeworkGrid');
     
+    // 取得今天日期
+    let d = new Date();
+    let dateString = d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日";
+
+    if (hwSection) {
+        hwSection.classList.remove('hidden'); // 🌟 功課區塊長駐不隱藏
+        
+        // 更新提示文字，加入日期顯示
+        let pTag = hwSection.querySelector('p');
+        if (pTag && !pTag.innerHTML.includes('hw-date-display')) {
+            pTag.innerHTML = `老師已派發專屬功課！完成將會記錄明細成績（每份功課限交 2 次）<br><span id="hw-date-display" class="inline-block mt-3 font-bold text-amber-800 bg-amber-200 px-4 py-1.5 rounded-full shadow-sm">📅 今日日期：${dateString}</span>`;
+        }
+    }
+    
     if (!dynamicHomeworkConfig || dynamicHomeworkConfig.length === 0) {
-        console.log("📭 功課清單為空，隱藏功課區塊。");
-        if (hwSection) hwSection.classList.add('hidden');
+        console.log("📭 功課清單為空，保留功課區塊但顯示無功課提示。");
+        if (hwGrid) {
+            hwGrid.innerHTML = `<div class="col-span-full text-center py-8 text-amber-700 font-bold bg-amber-100/50 rounded-xl border border-amber-200 border-dashed">🎉 今天暫無功課，好好休息或進行下方自主練習吧！</div>`;
+        }
         return;
     }
     
     // 提取不重複的功課名稱
     let uniqueHwNames = [...new Set(dynamicHomeworkConfig.map(c => c.hwName))];
     
-    if (hwSection) hwSection.classList.remove('hidden');
     if (hwGrid) {
         hwGrid.innerHTML = '';
         uniqueHwNames.forEach(hwName => {
@@ -123,7 +133,7 @@ function renderHomeworkButtons() {
             <button onclick="startHomework('${hwName}')" class="py-5 px-3 bg-white border-2 border-amber-300 rounded-xl hover:shadow-md hover:bg-amber-100 transition-all flex flex-col items-center justify-center text-center group shadow-sm">
                 <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">📚</span>
                 <span class="text-amber-800 font-bold text-lg">${hwName}</span>
-                <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md mt-2 border border-amber-200">共 ${totalQs} 題</span>
+                <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md mt-2 border border-amber-200">共 ${totalQs} 題 (每題 10 分)</span>
             </button>
             `;
         });
@@ -195,7 +205,6 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     if (myRankEnd) myRankEnd.innerHTML = myRankHtml;
 }
 
-// 🌟 核心修復：統一同步全域變數 window.totalQuestionsConfig，避免因非同步載入報錯
 function setQuestionNum(num) {
     totalQuestionsConfig = num;
     if (typeof window !== 'undefined') window.totalQuestionsConfig = num; 
@@ -313,7 +322,7 @@ function assignHandwriting(bank) {
     }
 }
 
-// 🌟 新增：啟動功課專屬生成器
+// 🌟 啟動功課專屬生成器
 window.startHomework = function(hwName) {
     try {
         isHomeworkMode = true;
@@ -350,7 +359,14 @@ window.startHomework = function(hwName) {
 
         if (questionBank.length === 0) return alert("功課題庫生成失敗，請檢查設定表！");
 
+        // 先依據原本難度配分（避免報錯）
         assignQuestionScores();
+
+        // 🌟 修改：功課模式中，所有題目不論難度皆強制設為 10 分
+        questionBank.forEach(q => {
+            q.scoreVal = 10;
+        });
+
         assignHandwriting(questionBank);
 
         // 初始化「各課題明細追蹤器」
@@ -377,7 +393,6 @@ function startGlobalMixed(level) {
 
         let topicsList = ['indices', 'factorization', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area'];
         
-        // 獲取最新設定的題數
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         let selectedTopics = [];
         
@@ -454,7 +469,6 @@ function startGame(levelPref) {
 
         currentLevelPref = levelPref;
         
-        // 獲取最新設定的題數
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         
         if (currentTopic === 'indices') questionBank = generateIndicesQuestions(numQ, currentLevelPref); 
@@ -629,15 +643,16 @@ function loadQuestion() {
 function handleAnswer(selectedOption, buttonElement) {
     attemptsCount++;
     
-    const skipBtns = document.querySelectorAll('.skip-action-btn');
-    skipBtns.forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-    });
-
     let q = questionBank[currentQuestionIndex];
 
     if (selectedOption.isCorrect) {
+        // 🌟 修改：只有在「答對」的時候，才停用所有的跳過按鈕
+        const skipBtns = document.querySelectorAll('.skip-action-btn');
+        skipBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        });
+
         if(buttonElement) {
             buttonElement.classList.add('border-green-500', 'bg-green-50');
             const spanEl = buttonElement.querySelector('span');
@@ -658,9 +673,10 @@ function handleAnswer(selectedOption, buttonElement) {
         showFeedback('correct', selectedOption.hint, true);
         disableAllButtons();
     } else {
+        // 🌟 修改：答錯的時候「不」停用跳過按鈕，讓學生隨時能放棄
         if(buttonElement) {
             buttonElement.classList.add('border-red-300', 'bg-red-50');
-            buttonElement.disabled = true;
+            buttonElement.disabled = true; // 只停用點錯的按鈕
         }
         showFeedback('incorrect', selectedOption.hint, false);
     }
@@ -922,6 +938,7 @@ window.confirmAndGrade = async function() {
     document.getElementById('hw-confirm-ui')?.classList.add('hidden');
     
     const skipBtns = document.querySelectorAll('.skip-action-btn');
+    // 批改中暫時停用跳過按鈕
     skipBtns.forEach(btn => {
         btn.disabled = true;
         btn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -978,6 +995,12 @@ window.confirmAndGrade = async function() {
             document.getElementById('draw-container')?.classList.add('border-green-500');
             document.getElementById('kb-container')?.classList.add('border-green-500');
         } else {
+            // 🌟 修改：答錯時重新啟用跳過按鈕，讓學生隨時能放棄
+            skipBtns.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+
             showFeedback('incorrect', finalHint, false);
             document.getElementById('draw-container')?.classList.add('border-red-400');
             document.getElementById('kb-container')?.classList.add('border-red-400');
@@ -1010,6 +1033,13 @@ window.giveUpHandwriting = function() {
     ['clear-btn', 'recognize-btn', 'kb-recognize-btn', 'kb-clear-btn'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.disabled = true;
+    });
+
+    // 🌟 修改：學生選擇放棄後，也一併停用跳過按鈕
+    const skipBtns = document.querySelectorAll('.skip-action-btn');
+    skipBtns.forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
     });
 };
 
@@ -1301,7 +1331,7 @@ window.startHomework = startHomework;
 window.restartLevel = restartLevel;
 
 document.addEventListener('DOMContentLoaded', () => { 
-    console.log("🚀 App.js V63.2 初始化執行... DOM 載入完成，已同步 HTML 按鈕修復方案並增強偵錯日誌！");
+    console.log("🚀 App.js V63.3 初始化執行... DOM 載入完成，已啟動雙軌制功課與防護系統！");
     showTopicScreen(); fetchConfig(); setInterval(() => fetchConfig(true), 5000); 
     const savedClass = getStoredData('dse_className'); const savedNum = getStoredData('dse_classNumber'); const savedName = getStoredData('dse_studentName');
     const classNameEl = document.getElementById('className'); if (classNameEl && savedClass) classNameEl.value = savedClass; 
