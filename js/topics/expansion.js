@@ -12,8 +12,8 @@ const msgExp3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 係數平�
 // ==========================================
 function generateExpansionQuestions(num, levelPref) {
     const bank = [];
-    const singleVars = ['x', 'y', 'a', 'b', 'm', 'n']; 
-    const varPairs = [['x', 'y'], ['a', 'b'], ['m', 'n'], ['p', 'q']];
+    const singleVars = ['x', 'y', 'm', 'n']; 
+    const varPairs = [['x', 'y'], ['m', 'n']];
 
     // 輔助函數：從 Google Sheet 動態設定中取得難度標題與說明
     function getLevelInfo(levelId, defaultTitle) {
