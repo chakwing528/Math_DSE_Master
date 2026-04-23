@@ -43,8 +43,8 @@ const msgInd3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 同類相�
 // ==========================================
 function generateIndicesQuestions(num, levelPref) {
     const bank = [];
-    const singleVars = ['x', 'y', 'a', 'b', 'm', 'n', 'r', 's', 'p', 'q']; 
-    const varPairs = [['x', 'y'], ['a', 'b'], ['m', 'n'], ['r', 's'], ['p', 'q']];
+    const singleVars = ['x', 'y', 'm', 'n']; 
+    const varPairs = [['x', 'y'], ['m', 'n']];
     
     for (let i = 0; i < num; i++) {
         let levelType = levelPref;
