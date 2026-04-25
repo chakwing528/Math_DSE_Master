@@ -191,7 +191,6 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     globalLeaderboard.slice(0, 20).forEach((student, index) => {
         let rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-6 text-center text-slate-400 font-bold text-sm">${index + 1}.</span>`));
         
-        // 🌟 更新：在首頁排行榜的分數下方，加入「今日: X 次」顯示
         html += `<div class="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md"><div class="flex items-center gap-3">${rankIcon}<span class="font-bold text-slate-700 text-base">${student.className} (${student.classNum}) ${student.studentName}</span></div><div class="text-right flex flex-col justify-center"><span class="text-indigo-600 font-bold text-base">${student.totalScore} 分</span><span class="text-slate-400 font-bold text-[11px] mt-0.5">今日: ${student.playCountToday || 0} 次</span></div></div>`;
     });
     html += '</div>';
@@ -202,7 +201,6 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     globalLeaderboard.slice(0, 20).forEach((student, index) => {
         let rankIcon = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `<span class="inline-block w-6 text-center text-slate-400 font-bold text-sm">${index + 1}.</span>`));
         
-        // 🌟 更新：在結算畫面排行榜的分數下方，加入「今日: X 次」顯示
         endHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md"><div class="flex items-center gap-2">${rankIcon}<span class="font-bold text-slate-700 text-sm sm:text-base">${student.className} (${student.classNum}) ${student.studentName}</span></div><div class="text-right flex flex-col justify-center"><span class="text-indigo-600 font-bold text-sm sm:text-base">${student.totalScore} 分</span><span class="text-slate-400 font-bold text-[10px] mt-0.5">今日: ${student.playCountToday || 0} 次</span></div></div>`;
     });
     endHtml += '</div>';
@@ -1275,9 +1273,10 @@ function submitToGoogleSheet() {
                 if (fill) fill.style.width = targetProgress + '%';
                 if (textUI) textUI.textContent = isCrossed ? '100 / 100' : `${backendNewTotal % 100} / 100`;
 
+                // 🌟 更新：在成功提示訊息中，將「今天的提交次數」顯示在總分旁邊
                 if (isCrossed) {
                     if (hint) hint.innerHTML = `<span class="text-amber-600 font-bold">🎉 恭喜達成滿百目標！正在解鎖刮刮卡...</span>`;
-                    statusText.innerHTML = `${data.message}<br>🎉 目前總分：${backendNewTotal} 分。邁向下一抽還差 <span class="text-indigo-600 font-bold">${100 - (backendNewTotal % 100)} 分</span>！`;
+                    statusText.innerHTML = `${data.message}<br>🎉 目前總分：${backendNewTotal} 分 (今日已交：${backendPlayCount} 次)。邁向下一抽還差 <span class="text-indigo-600 font-bold">${100 - (backendNewTotal % 100)} 分</span>！`;
                     setTimeout(() => {
                         const progUI = document.getElementById('progressUI'); const scratchUI = document.getElementById('scratchUI'); const rewardZone = document.getElementById('rewardZone');
                         if (progUI && scratchUI && rewardZone) {
@@ -1293,7 +1292,7 @@ function submitToGoogleSheet() {
                     }, 1500);
                 } else {
                     if (hint) hint.innerHTML = `還差 <span class="text-indigo-600 font-bold">${pointsNeeded} 分</span> 即可獲得抽獎機會！傳送成績後更新進度。`;
-                    statusText.innerHTML = `${data.message}<br>📊 目前總分：${backendNewTotal} 分。`;
+                    statusText.innerHTML = `${data.message}<br>📊 目前總分：${backendNewTotal} 分 (今日已交：${backendPlayCount} 次)。`;
                 }
                 
                 statusText.className = "text-center text-sm font-bold mt-3 text-green-600 block leading-relaxed"; statusText.classList.remove('hidden');
