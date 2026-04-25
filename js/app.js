@@ -1,6 +1,6 @@
 // js/app.js
 
-console.log("App.js V65 成功載入！已更新功課排版、修復日期顯示並新增綜合挑戰分數標籤！");
+console.log("App.js V66 成功載入！已啟動終極安全防護：UUID 防重播、時間驗證與防連按鎖！");
 
 // ==========================================
 // 🚨 老師設定區
@@ -47,6 +47,11 @@ let currentHomeworkName = "";
 let dynamicHomeworkConfig = [];
 let topicScores = {}; // 追蹤各課題的分數明細
 
+// 🛡️ 終極防護系統變數
+let quizStartTime = 0;
+let quizTimeTaken = 0;
+let sessionNonce = "";
+
 let currentRecognizedLaTeX = "";
 
 function getStoredData(key) { try { return localStorage.getItem(key) || ''; } catch (e) { return ''; } }
@@ -77,7 +82,7 @@ async function fetchConfig(isSilent = false) {
             if (data.topicConfig) dynamicTopicConfig = data.topicConfig;
             if (data.quotes) dynamicQuotes = data.quotes;
             
-            // 🌟 接收並渲染功課清單 (修復無法清除「連線中」的問題)
+            // 🌟 接收並渲染功課清單
             if (data.homeworkConfig) {
                 dynamicHomeworkConfig = data.homeworkConfig;
             } else {
@@ -107,9 +112,8 @@ function renderHomeworkButtons() {
     let dateString = d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日";
 
     if (hwSection) {
-        hwSection.classList.remove('hidden'); // 🌟 功課區塊長駐不隱藏
+        hwSection.classList.remove('hidden'); // 功課區塊長駐不隱藏
         
-        // 修復日期載入 Bug：直接尋找 span 元素並更新，若沒有則重構
         let dateSpan = document.getElementById('hw-date-display');
         if (dateSpan) {
             dateSpan.innerHTML = `📅 今日日期：${dateString}`;
@@ -138,7 +142,7 @@ function renderHomeworkButtons() {
             // 計算這份功課的總題數
             let totalQs = dynamicHomeworkConfig.filter(c => c.hwName === hwName).reduce((sum, c) => sum + (c.qCount || 1), 0);
             
-            // 🌟 移除 emoji，按鈕設計與自主練習完全一致 (py-4 px-2)
+            // 移除 emoji，按鈕設計與自主練習完全一致 (py-4 px-2)
             hwGrid.innerHTML += `
             <button onclick="startHomework('${hwName}')" class="py-4 px-2 border border-amber-300 rounded-xl hover:border-amber-400 hover:shadow-md hover:bg-amber-100 transition-all bg-white shadow-sm flex flex-col items-center justify-center group">
                 <span class="text-amber-800 font-bold text-sm sm:text-base">${hwName}</span>
@@ -241,7 +245,7 @@ function showTopicScreen() {
 function backToLevelSelection() {
     document.getElementById('appContainer')?.classList.add('hidden');
     document.getElementById('endScreen')?.classList.add('hidden');
-    if (isHomeworkMode) showTopicScreen(); // 功課做完直接回首頁
+    if (isHomeworkMode) showTopicScreen(); 
     else if (currentTopic === 'global_mixed') showTopicScreen(); 
     else selectTopic(currentTopic);
 }
@@ -368,7 +372,6 @@ window.startHomework = function(hwName) {
 
         if (questionBank.length === 0) return alert("功課題庫生成失敗，請檢查設定表！");
 
-        // 先依據原本難度配分（避免報錯）
         assignQuestionScores();
 
         // 🌟 功課模式中，所有題目不論難度皆強制設為 10 分
@@ -378,7 +381,6 @@ window.startHomework = function(hwName) {
 
         assignHandwriting(questionBank);
 
-        // 初始化「各課題明細追蹤器」
         topicScores = {};
         questionBank.forEach(q => {
             let t = q.topic;
@@ -458,7 +460,6 @@ function startGlobalMixed(level) {
         assignQuestionScores();
         assignHandwriting(questionBank);
 
-        // 初始化「各課題明細追蹤器」
         topicScores = {};
         questionBank.forEach(q => {
             let t = q.topic;
@@ -493,7 +494,6 @@ function startGame(levelPref) {
         assignQuestionScores();
         assignHandwriting(questionBank);
 
-        // 初始化「各課題明細追蹤器」
         topicScores = {};
         questionBank.forEach(q => {
             let t = q.topic;
@@ -507,6 +507,11 @@ function startGame(levelPref) {
 
 function startQuizSession() {
     currentQuestionIndex = 0; score = 0; updateScoreDisplay();
+    
+    // 🌟 啟動防護紀錄：記錄開始時間與產生一次性隨機碼 (UUID)
+    quizStartTime = Date.now();
+    sessionNonce = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+
     document.getElementById('topicScreen')?.classList.add('hidden');
     document.getElementById('startScreen')?.classList.add('hidden');
     document.getElementById('endScreen')?.classList.add('hidden'); 
@@ -655,7 +660,6 @@ function handleAnswer(selectedOption, buttonElement) {
     let q = questionBank[currentQuestionIndex];
 
     if (selectedOption.isCorrect) {
-        // 🌟 答對的時候，停用所有的跳過按鈕
         const skipBtns = document.querySelectorAll('.skip-action-btn');
         skipBtns.forEach(btn => {
             btn.disabled = true;
@@ -682,7 +686,6 @@ function handleAnswer(selectedOption, buttonElement) {
         showFeedback('correct', selectedOption.hint, true);
         disableAllButtons();
     } else {
-        // 🌟 答錯的時候「不」停用跳過按鈕，讓學生隨時能放棄
         const skipBtns = document.querySelectorAll('.skip-action-btn');
         skipBtns.forEach(btn => {
             btn.disabled = false;
@@ -953,7 +956,6 @@ window.confirmAndGrade = async function() {
     document.getElementById('hw-confirm-ui')?.classList.add('hidden');
     
     const skipBtns = document.querySelectorAll('.skip-action-btn');
-    // 批改中暫時停用跳過按鈕
     skipBtns.forEach(btn => {
         btn.disabled = true;
         btn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -1010,7 +1012,6 @@ window.confirmAndGrade = async function() {
             document.getElementById('draw-container')?.classList.add('border-green-500');
             document.getElementById('kb-container')?.classList.add('border-green-500');
         } else {
-            // 🌟 答錯時重新啟用跳過按鈕，讓學生隨時能放棄
             skipBtns.forEach(btn => {
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1050,7 +1051,6 @@ window.giveUpHandwriting = function() {
         if (el) el.disabled = true;
     });
 
-    // 學生選擇放棄後，也一併停用跳過按鈕
     const skipBtns = document.querySelectorAll('.skip-action-btn');
     skipBtns.forEach(btn => {
         btn.disabled = true;
@@ -1064,6 +1064,9 @@ window.giveUpHandwriting = function() {
 function showEndScreen() {
     document.getElementById('appContainer')?.classList.add('hidden');
     document.getElementById('endScreen')?.classList.remove('hidden');
+    
+    // 🌟 結算作答時間 (秒)
+    quizTimeTaken = Math.floor((Date.now() - quizStartTime) / 1000);
     
     let totalPossibleScore = questionBank.reduce((sum, q) => sum + (q.scoreVal || 10), 0);
     
@@ -1080,11 +1083,9 @@ function showEndScreen() {
         else subtitle.textContent = "AI 分析顯示你還需要多加練習，不要灰心，繼續努力！";
     }
 
-    // 渲染各課題表現明細表
     const trackerUI = document.getElementById('topicDetailsTracker');
     const listUI = document.getElementById('topicDetailsList');
     if (trackerUI && listUI) {
-        // 如果不是綜合挑戰也不是功課模式，只有一個單元時，隱藏明細以保持簡潔
         if (!isHomeworkMode && currentTopic !== 'global_mixed') {
             trackerUI.classList.add('hidden');
         } else {
@@ -1179,6 +1180,9 @@ function submitToGoogleSheet() {
     
     if (!classNameEl || !classNumberEl || !studentNameEl || !statusText || !btn) return;
 
+    // 🛑 防連點機制：若按鈕已鎖定，直接阻擋
+    if (btn.disabled) return;
+
     const className = classNameEl.value.trim().toUpperCase();
     const classNumber = classNumberEl.value.trim();
     const studentName = studentNameEl.value.trim();
@@ -1196,7 +1200,6 @@ function submitToGoogleSheet() {
     let totalScoreVal = questionBank.reduce((sum, q) => sum + (q.scoreVal || 10), 0);
     let percentageVal = ((score / totalScoreVal) * 100).toFixed(0) + "%";
 
-    // 打包課題明細資料準備傳送給後端
     let detailsArr = [];
     for (let t in topicScores) {
         let s = topicScores[t];
@@ -1205,14 +1208,18 @@ function submitToGoogleSheet() {
     }
     let topicDetailsString = detailsArr.join(" | ");
 
+    // 🌟 準備終極防護參數
+    const timestampStr = Date.now().toString();
+    const timeTakenStr = quizTimeTaken.toString();
+
     // ====================================================================
-    // 🔐 終極加密防禦：強制將分數轉為字串進行加密，消滅型別錯誤
+    // 🔐 終極加密防禦：加入 UUID、時間戳與作答時間進行混合加密
     // ====================================================================
     const rawScoreStr = String(score).trim();
     const rawTotalScoreStr = String(totalScoreVal).trim();
     const saltKey = "DseMath@2026_HK_Secure!";
     
-    const rawString = className + "|" + classNumber + "|" + rawScoreStr + "|" + rawTotalScoreStr + "|" + saltKey;
+    const rawString = className + "|" + classNumber + "|" + rawScoreStr + "|" + rawTotalScoreStr + "|" + sessionNonce + "|" + timestampStr + "|" + timeTakenStr + "|" + saltKey;
     let hashVal = 0;
     for (let i = 0; i < rawString.length; i++) {
         hashVal = ((hashVal << 5) - hashVal) + rawString.charCodeAt(i);
@@ -1231,10 +1238,13 @@ function submitToGoogleSheet() {
     formData.append('totalScore', totalScoreVal); 
     formData.append('percentage', percentageVal);
     formData.append('sig', signature); 
-    // 功課追蹤欄位
     formData.append('isHomework', isHomeworkMode);
     formData.append('homeworkName', currentHomeworkName);
     formData.append('topicDetails', topicDetailsString);
+    // 🛡️ 終極防護欄位
+    formData.append('nonce', sessionNonce);
+    formData.append('timestamp', timestampStr);
+    formData.append('timeTaken', timeTakenStr);
 
     fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData })
         .then(response => response.json())
@@ -1294,7 +1304,6 @@ function submitToGoogleSheet() {
                 if (btn) {
                     btn.disabled = false; btn.textContent = "重新傳送"; btn.classList.remove('opacity-50');
                 }
-                // ⚠️ 如果是超過次數等伺服器攔截，會在這裡顯示紅色警告
                 statusText.textContent = data.message; statusText.className = "text-center text-sm font-bold mt-3 text-red-500 block"; statusText.classList.remove('hidden');
             }
         })
@@ -1331,7 +1340,6 @@ function renderMath() {
     }
 }
 
-// 將所有外部全域函數掛載到 window，確保 HTML 能順利調用
 window.setQuestionNum = setQuestionNum; 
 window.showTopicScreen = showTopicScreen; 
 window.backToLevelSelection = backToLevelSelection; 
@@ -1346,12 +1354,11 @@ window.startHomework = startHomework;
 window.restartLevel = restartLevel;
 
 document.addEventListener('DOMContentLoaded', () => { 
-    console.log("🚀 App.js V65 初始化執行... DOM 載入完成！");
+    console.log("🚀 App.js V66 初始化執行... DOM 載入完成！防護系統就緒！");
     
-    // 🌟 為綜合挑戰加入不同程度的得分顯示
     const globalBtns = document.querySelectorAll("button[onclick*='startGlobalMixed']");
     globalBtns.forEach(btn => {
-        if (btn.innerHTML.includes('答對得')) return; // 避免重複加入
+        if (btn.innerHTML.includes('答對得')) return; 
         let levelMatch = btn.getAttribute('onclick').match(/startGlobalMixed\((\d)\)/);
         if (levelMatch) {
             let lvl = parseInt(levelMatch[1]);
