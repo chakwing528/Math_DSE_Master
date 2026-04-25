@@ -172,17 +172,29 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     
     const currentUserClass = String(overrideClass || getStoredData('dse_className')).toUpperCase().trim();
     const currentUserNum = String(overrideNum || getStoredData('dse_classNumber')).trim();
+    const currentUserName = String(getStoredData('dse_studentName')).trim();
 
     let userRank = -1;
     let userScore = 0;
+    let userPlayCount = 0;
     let userMatched = false;
 
     globalLeaderboard.forEach((student, index) => {
         const sClass = String(student.className).toUpperCase().trim();
         const sNum = String(student.classNum).trim();
-        if (sClass === currentUserClass && sNum === currentUserNum && !userMatched) {
+        const sName = String(student.studentName).trim();
+        
+        let isMatch = (sClass === currentUserClass && sNum === currentUserNum);
+        
+        // 🌟 防呆修正：後端傳來的空值若對應到學號 0，透過姓名雙重驗證
+        if (!isMatch && sClass === currentUserClass && sNum === "" && currentUserNum === "0" && sName === currentUserName) {
+            isMatch = true;
+        }
+
+        if (isMatch && !userMatched) {
             userRank = index + 1;
             userScore = student.totalScore;
+            userPlayCount = student.playCountToday || 0;
             userMatched = true;
         }
     });
@@ -209,7 +221,14 @@ function renderLeaderboards(overrideClass = null, overrideNum = null) {
     let myRankHtml = '';
     if (currentUserClass && currentUserNum) {
         if (userRank !== -1) {
-            myRankHtml = `<div class="bg-[#FFF3C4] border border-[#FDE68A] p-4 rounded-xl flex justify-between items-center shadow-sm mb-6"><span class="font-bold text-amber-800 text-base flex items-center gap-2"><span class="text-xl">👉</span> 你的目前排名：第 ${userRank} 名</span><span class="text-amber-800 font-bold text-lg">${userScore} 分</span></div>`;
+            // 🌟 修正：在專屬排名框內，同步顯示今日提交次數
+            myRankHtml = `<div class="bg-[#FFF3C4] border border-[#FDE68A] p-4 rounded-xl flex justify-between items-center shadow-sm mb-6">
+                <span class="font-bold text-amber-800 text-base flex items-center gap-2"><span class="text-xl">👉</span> 你的目前排名：第 ${userRank} 名</span>
+                <div class="text-right flex flex-col justify-center">
+                    <span class="text-amber-800 font-bold text-lg">${userScore} 分</span>
+                    <span class="text-amber-600 font-bold text-xs mt-0.5">今日已交: ${userPlayCount} 次</span>
+                </div>
+            </div>`;
         } else {
             myRankHtml = `<div class="bg-slate-100 border border-slate-300 p-3 rounded-lg flex justify-between items-center shadow-sm mb-6"><span class="font-bold text-slate-600">👉 你的目前排名：未上榜</span><span class="text-slate-500 font-bold text-sm">繼續刷題累積積分吧！</span></div>`;
         }
@@ -1259,9 +1278,30 @@ function submitToGoogleSheet() {
                 let isCrossed = data.crossedThreshold;
                 let officialName = data.officialName || studentName; 
                 
-                let student = globalLeaderboard.find(s => String(s.className).toUpperCase().trim() === className && String(s.classNum).trim() === classNumber);
-                if (student) { student.totalScore = backendNewTotal; } 
-                else { globalLeaderboard.push({className: className, classNum: classNumber, studentName: officialName, totalScore: backendNewTotal}); }
+                // 🌟 前端防呆匹配機制更新，解決伺服器空值 0 問題
+                let student = globalLeaderboard.find(s => {
+                    let sClass = String(s.className).toUpperCase().trim();
+                    let sNum = String(s.classNum).trim();
+                    let isMatch = (sClass === className && sNum === classNumber);
+                    if (!isMatch && sClass === className && sNum === "" && classNumber === "0") {
+                        isMatch = true;
+                    }
+                    return isMatch;
+                });
+                
+                if (student) { 
+                    student.totalScore = backendNewTotal; 
+                    student.playCountToday = backendPlayCount; 
+                } 
+                else { 
+                    globalLeaderboard.push({
+                        className: className, 
+                        classNum: classNumber, 
+                        studentName: officialName, 
+                        totalScore: backendNewTotal,
+                        playCountToday: backendPlayCount
+                    }); 
+                }
                 renderLeaderboards();
 
                 let pointsNeeded = 100 - (backendNewTotal % 100);
@@ -1380,9 +1420,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     showTopicScreen(); fetchConfig(); setInterval(() => fetchConfig(true), 5000); 
+    
+    // 載入暫存
     const savedClass = getStoredData('dse_className'); const savedNum = getStoredData('dse_classNumber'); const savedName = getStoredData('dse_studentName');
     const classNameEl = document.getElementById('className'); if (classNameEl && savedClass) classNameEl.value = savedClass; 
     const classNumEl = document.getElementById('classNumber'); if (classNumEl && savedNum) classNumEl.value = savedNum; 
     const studentNameEl = document.getElementById('studentName'); if (studentNameEl && savedName) studentNameEl.value = savedName;
+    
+    // 🌟 新增：即時監聽輸入並更新暫存與排名顯示
+    classNameEl?.addEventListener('input', (e) => { setStoredData('dse_className', e.target.value.toUpperCase().trim()); renderLeaderboards(); });
+    classNumEl?.addEventListener('input', (e) => { setStoredData('dse_classNumber', e.target.value.trim()); renderLeaderboards(); });
+    studentNameEl?.addEventListener('input', (e) => { setStoredData('dse_studentName', e.target.value.trim()); renderLeaderboards(); });
+
     setupCanvasEvents();
 });
