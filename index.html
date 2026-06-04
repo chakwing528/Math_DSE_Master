@@ -38,7 +38,7 @@
 
         // 🌟 解決 ReferenceError: 直接在此定義 UI 切換邏輯
         // 確保即使在 Canvas 環境中（外部 app.js 無法載入時），題數按鈕仍能正常點擊不報錯
-        window.totalQuestionsConfig = 3;
+        window.totalQuestionsConfig = 10; // 🔧 暫時預設改為 10 題
         window.setQuestionNum = function(num) {
             window.totalQuestionsConfig = num;
             document.querySelectorAll('.num-btn').forEach(btn => {
@@ -450,9 +450,9 @@
             <!-- 題數設定膠囊 -->
             <div class="mb-8 flex justify-center items-center bg-slate-100 rounded-2xl p-1.5 mx-auto w-fit">
                 <span class="text-slate-600 font-bold text-xs sm:text-sm mx-3">每回合題數</span>
-                <button id="btn-num-3" onclick="setQuestionNum(3)" class="num-btn px-5 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md transition-all text-sm tabular-nums">3 題</button>
+                <button id="btn-num-3" onclick="setQuestionNum(3)" class="num-btn px-5 py-2 rounded-xl font-bold bg-transparent text-slate-600 hover:bg-white transition-all text-sm tabular-nums">3 題</button>
                 <button id="btn-num-5" onclick="setQuestionNum(5)" class="num-btn px-5 py-2 rounded-xl font-bold bg-transparent text-slate-600 hover:bg-white transition-all text-sm tabular-nums">5 題</button>
-                <button id="btn-num-10" onclick="setQuestionNum(10)" class="num-btn px-5 py-2 rounded-xl font-bold bg-transparent text-slate-600 hover:bg-white transition-all text-sm tabular-nums">10 題</button>
+                <button id="btn-num-10" onclick="setQuestionNum(10)" class="num-btn px-5 py-2 rounded-xl font-bold bg-indigo-600 text-white shadow-md transition-all text-sm tabular-nums">10 題</button>
             </div>
 
             <!-- 九宮格課題區塊（簡約：只顯示課題名） -->
@@ -940,27 +940,27 @@
     <!-- 🌟 強制破除快取 (v=71) 加上 defer 確保載入順序 -->
     <!-- ========================================== -->
     <script src="js/utils.js?v=71" defer></script>
-    <script src="js/topics/indices.js?v=71" defer></script>
-    <script src="js/topics/factorization.js?v=71" defer></script>
-    <script src="js/topics/rounding.js?v=71" defer></script>
-    <script src="js/topics/identities.js?v=71" defer></script>
-    <script src="js/topics/fractions.js?v=71" defer></script>
-    <script src="js/topics/binary.js?v=71" defer></script>
-    <script src="js/topics/expansion.js?v=71" defer></script>
-    <script src="js/topics/algebraic_fractions_mul_div.js?v=71" defer></script>
-    <script src="js/topics/triangle_area.js?v=71" defer></script>
-    <script src="js/topics/change_of_subject.js?v=72" defer></script>
-    <script src="js/topics/pricing.js?v=72" defer></script>
-    <script src="js/topics/compound_inequalities.js?v=72" defer></script>
-    <script src="js/topics/compound_interest.js?v=72" defer></script>
-    <script src="js/topics/functions_remainder.js?v=72" defer></script>
-    <script src="js/topics/hcf_lcm.js?v=72" defer></script>
-    <script src="js/topics/linear_equations.js?v=72" defer></script>
-    <script src="js/topics/percentage_change.js?v=72" defer></script>
-    <script src="js/topics/quadratic_equations.js?v=72" defer></script>
-    <script src="js/topics/simple_inequalities.js?v=72" defer></script>
-    <script src="js/topics/simultaneous_equations.js?v=72" defer></script>
-    <script src="js/topics/vertex.js?v=72" defer></script>
+    <script src="topics/indices.js?v=71" defer></script>
+    <script src="topics/factorization.js?v=71" defer></script>
+    <script src="topics/rounding.js?v=71" defer></script>
+    <script src="topics/identities.js?v=71" defer></script>
+    <script src="topics/fractions.js?v=71" defer></script>
+    <script src="topics/binary.js?v=71" defer></script>
+    <script src="topics/expansion.js?v=71" defer></script>
+    <script src="topics/algebraic_fractions_mul_div.js?v=71" defer></script>
+    <script src="topics/triangle_area.js?v=71" defer></script>
+    <script src="topics/change_of_subject.js?v=72" defer></script>
+    <script src="topics/pricing.js?v=72" defer></script>
+    <script src="topics/compound_inequalities.js?v=72" defer></script>
+    <script src="topics/compound_interest.js?v=72" defer></script>
+    <script src="topics/functions_remainder.js?v=72" defer></script>
+    <script src="topics/hcf_lcm.js?v=72" defer></script>
+    <script src="topics/linear_equations.js?v=72" defer></script>
+    <script src="topics/percentage_change.js?v=72" defer></script>
+    <script src="topics/quadratic_equations.js?v=72" defer></script>
+    <script src="topics/simple_inequalities.js?v=72" defer></script>
+    <script src="topics/simultaneous_equations.js?v=72" defer></script>
+    <script src="topics/vertex.js?v=72" defer></script>
     <script src="js/app.js?v=72" defer></script>
 
 </body>
