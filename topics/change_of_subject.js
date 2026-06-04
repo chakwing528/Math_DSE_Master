@@ -7,6 +7,15 @@ const msgSubj1 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 移項時
 const msgSubj2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 交叉相乘或合併同類項時出錯</div>`;
 const msgSubj3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 提取公因式或展開時發生錯誤</div>`;
 
+// 🌟 將多個方程式步驟合併為單一 aligned 區塊（自動於第一個 = 對齊）
+function _subjAligned(eqs) {
+    const lines = eqs.map(eq => {
+        const m = eq.match(/^([\s\S]*?)\s*=\s*([\s\S]*)$/);
+        return m ? `${m[1]} &= ${m[2]}` : eq;
+    });
+    return `\\begin{aligned} ${lines.join(' \\\\ ')} \\end{aligned}`;
+}
+
 // ==========================================
 // 題目生成器：主項轉換 (Change of Subject)
 // ==========================================
@@ -63,9 +72,11 @@ function generateSubjectQuestions(num, levelPref) {
                 questionMathStr = `\\text{若 } ${A}${targetVar} + ${B}${otherVar} = ${C} \\text{ ，則 } ${targetVar} =`;
                 correctStr = `\\frac{${C} - ${B}${otherVar}}{${A}}`;
 
-                steps.push({ text: `${A}${targetVar} + ${B}${otherVar} = ${C}`, hide: false });
-                steps.push({ text: `${A}${targetVar} = ${C} - ${B}${otherVar}`, hide: false });
-                steps.push({ text: `${targetVar} = \\frac{${C} - ${B}${otherVar}}{${A}}`, hide: false });
+                steps.push({ text: _subjAligned([
+                    `${A}${targetVar} + ${B}${otherVar} = ${C}`,
+                    `${A}${targetVar} = ${C} - ${B}${otherVar}`,
+                    `${targetVar} = \\frac{${C} - ${B}${otherVar}}{${A}}`
+                ]), hide: false });
 
                 let w1 = `\\frac{${C} + ${B}${otherVar}}{${A}}`;
                 let w2 = `\\frac{${B}${otherVar} - ${C}}{${A}}`;
@@ -82,9 +93,11 @@ function generateSubjectQuestions(num, levelPref) {
                 questionMathStr = `\\text{若 } ${C} - ${A}${targetVar} = ${B}${otherVar} \\text{ ，則 } ${targetVar} =`;
                 correctStr = `\\frac{${C} - ${B}${otherVar}}{${A}}`;
 
-                steps.push({ text: `${C} - ${A}${targetVar} = ${B}${otherVar}`, hide: false });
-                steps.push({ text: `${C} - ${B}${otherVar} = ${A}${targetVar}`, hide: false });
-                steps.push({ text: `${targetVar} = \\frac{${C} - ${B}${otherVar}}{${A}}`, hide: false });
+                steps.push({ text: _subjAligned([
+                    `${C} - ${A}${targetVar} = ${B}${otherVar}`,
+                    `${C} - ${B}${otherVar} = ${A}${targetVar}`,
+                    `${targetVar} = \\frac{${C} - ${B}${otherVar}}{${A}}`
+                ]), hide: false });
 
                 let w1 = `\\frac{${B}${otherVar} - ${C}}{${A}}`;
                 let w2 = `\\frac{${C} + ${B}${otherVar}}{${A}}`;
@@ -115,13 +128,15 @@ function generateSubjectQuestions(num, levelPref) {
                 
                 correctStr = `\\frac{${numCoef}${otherVar} ${numConstStr}}{${A} - ${otherVar}}`;
 
-                steps.push({ text: `${otherVar} = ${A} - \\frac{${B}}{${targetVar} + ${C}}`, hide: false });
-                steps.push({ text: `\\frac{${B}}{${targetVar} + ${C}} = ${A} - ${otherVar}`, hide: false });
-                steps.push({ text: `${targetVar} + ${C} = \\frac{${B}}{${A} - ${otherVar}}`, hide: false });
-                steps.push({ text: `${targetVar} = \\frac{${B}}{${A} - ${otherVar}} - ${C}`, hide: false });
-                steps.push({ text: `${targetVar} = \\frac{${B} - ${C}(${A} - ${otherVar})}{${A} - ${otherVar}}`, hide: false });
-                steps.push({ text: `${targetVar} = \\frac{${B} - ${A*C} + ${C}${otherVar}}{${A} - ${otherVar}}`, hide: false });
-                steps.push({ text: `${targetVar} = ${correctStr}`, hide: false });
+                steps.push({ text: _subjAligned([
+                    `${otherVar} = ${A} - \\frac{${B}}{${targetVar} + ${C}}`,
+                    `\\frac{${B}}{${targetVar} + ${C}} = ${A} - ${otherVar}`,
+                    `${targetVar} + ${C} = \\frac{${B}}{${A} - ${otherVar}}`,
+                    `${targetVar} = \\frac{${B}}{${A} - ${otherVar}} - ${C}`,
+                    `${targetVar} = \\frac{${B} - ${C}(${A} - ${otherVar})}{${A} - ${otherVar}}`,
+                    `${targetVar} = \\frac{${B} - ${A*C} + ${C}${otherVar}}{${A} - ${otherVar}}`,
+                    `${targetVar} = ${correctStr}`
+                ]), hide: false });
 
                 let fakeConst1 = numConst - 2*B;
                 let w1ConstStr = fakeConst1 > 0 ? `+ ${fakeConst1}` : `- ${Math.abs(fakeConst1)}`;
@@ -158,17 +173,20 @@ function generateSubjectQuestions(num, levelPref) {
                 let numStr = num === 1 ? otherVar : (num === -1 ? "-" + otherVar : num + otherVar);
                 correctStr = denom === 1 ? numStr : `\\frac{${numStr}}{${denom}}`;
 
-                steps.push({ text: `\\frac{${A}}{${targetVar} - ${B}${otherVar}} = \\frac{${C}}{${targetVar}}`, hide: false });
-                steps.push({ text: `${A}${targetVar} = ${C}(${targetVar} - ${B}${otherVar})`, hide: false });
-                steps.push({ text: `${A}${targetVar} = ${C}${targetVar} - ${B*C}${otherVar}`, hide: false });
-                steps.push({ text: `${B*C}${otherVar} = ${C}${targetVar} - ${A}${targetVar}`, hide: false });
-                steps.push({ text: `${B*C}${otherVar} = (${C} - ${A})${targetVar}`, hide: false });
+                let _eqs2 = [
+                    `\\frac{${A}}{${targetVar} - ${B}${otherVar}} = \\frac{${C}}{${targetVar}}`,
+                    `${A}${targetVar} = ${C}(${targetVar} - ${B}${otherVar})`,
+                    `${A}${targetVar} = ${C}${targetVar} - ${B*C}${otherVar}`,
+                    `${B*C}${otherVar} = ${C}${targetVar} - ${A}${targetVar}`,
+                    `${B*C}${otherVar} = (${C} - ${A})${targetVar}`
+                ];
                 if ((C - A) / g !== 1 && (C - A) / g !== -1) {
-                    steps.push({ text: `${targetVar} = \\frac{${B*C}${otherVar}}{${C - A}}`, hide: false });
+                    _eqs2.push(`${targetVar} = \\frac{${B*C}${otherVar}}{${C - A}}`);
                 }
                 if (g > 1 || C - A < 0) {
-                    steps.push({ text: `${targetVar} = ${correctStr}`, hide: false });
+                    _eqs2.push(`${targetVar} = ${correctStr}`);
                 }
+                steps.push({ text: _subjAligned(_eqs2), hide: false });
 
                 // 產生干擾項並化簡
                 let getWrongOpt = (n, d) => {
@@ -226,17 +244,19 @@ function generateSubjectQuestions(num, levelPref) {
 
             correctStr = `\\frac{${formatLin(numCoef, numConst, otherVar)}}{${formatLin(denCoef, denConst, otherVar)}}`;
 
-            steps.push({ text: `(${A}${targetVar} + 1)(${otherVar} - ${B}) = ${C}${otherVar}(${E}${targetVar} - 1)`, hide: false });
-            steps.push({ text: `${A}${targetVar}${otherVar} - ${A*B}${targetVar} + ${otherVar} - ${B} = ${C*E}${targetVar}${otherVar} - ${C}${otherVar}`, hide: false });
-            steps.push({ text: `${A}${targetVar}${otherVar} - ${C*E}${targetVar}${otherVar} - ${A*B}${targetVar} = -${C}${otherVar} - ${otherVar} + ${B}`, hide: false });
-            steps.push({ text: `${A - C*E}${targetVar}${otherVar} - ${A*B}${targetVar} = ${-(C + 1)}${otherVar} + ${B}`, hide: false });
-            steps.push({ text: `${targetVar}(${A - C*E}${otherVar} - ${A*B}) = ${-(C + 1)}${otherVar} + ${B}`, hide: false });
-            
+            let _eqs3 = [
+                `(${A}${targetVar} + 1)(${otherVar} - ${B}) = ${C}${otherVar}(${E}${targetVar} - 1)`,
+                `${A}${targetVar}${otherVar} - ${A*B}${targetVar} + ${otherVar} - ${B} = ${C*E}${targetVar}${otherVar} - ${C}${otherVar}`,
+                `${A}${targetVar}${otherVar} - ${C*E}${targetVar}${otherVar} - ${A*B}${targetVar} = -${C}${otherVar} - ${otherVar} + ${B}`,
+                `${A - C*E}${targetVar}${otherVar} - ${A*B}${targetVar} = ${-(C + 1)}${otherVar} + ${B}`,
+                `${targetVar}(${A - C*E}${otherVar} - ${A*B}) = ${-(C + 1)}${otherVar} + ${B}`
+            ];
             let rawCorrect = `\\frac{${-(C + 1)}${otherVar} + ${B}}{${A - C*E}${otherVar} - ${A*B}}`;
-            steps.push({ text: `${targetVar} = ${rawCorrect}`, hide: false });
+            _eqs3.push(`${targetVar} = ${rawCorrect}`);
             if (rawCorrect !== correctStr) {
-                steps.push({ text: `${targetVar} = ${correctStr}`, hide: false });
+                _eqs3.push(`${targetVar} = ${correctStr}`);
             }
+            steps.push({ text: _subjAligned(_eqs3), hide: false });
 
             let w1 = `\\frac{${formatLin(numCoef, numConst, otherVar)}}{${formatLin(denCoef, Math.abs(denConst), otherVar)}}`;
             let w2 = `\\frac{${formatLin(Math.abs(numCoef), numConst, otherVar)}}{${formatLin(denCoef, denConst, otherVar)}}`;
