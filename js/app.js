@@ -24,7 +24,19 @@ const fallbackConfigs = {
     'binary': { name: '二進制', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '二進制轉十進制<br>只有加法。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '十進制轉二進制<br>只有加法。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '綜合轉換<br>包含加法與減法。' } ] },
     'expansion': { name: '恆等式的展開', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '展開 (x+a)² 或 (x+a)(x-a)<br>基礎展開。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '展開 (bx+a)² 或 (bx+a)(bx-a)<br>b 為正整數。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '展開 (bx+a)² 或 (bx+a)(bx-a)<br>a 與 b 皆可為負數。' } ] },
     'alg_frac_mul_div': { name: '代數分式的乘除法', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '單項式乘除法<br>指數定律約簡' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '二項式乘除法<br>提公因式與變號' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '進階因式分解<br>平方差與完全平方' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '進階因式分解<br>十字相乘法' } ] },
-    'triangle_area': { name: '三角形面積', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '包含 1/2absinC 及 希羅公式<br>考驗公式判別與計算。' } ] }
+    'triangle_area': { name: '三角形面積', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '包含 1/2absinC 及 希羅公式<br>考驗公式判別與計算。' } ] },
+    'change_of_subject': { name: '主項轉換', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎主項轉換<br>一步變項移項。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '進階主項轉換<br>含括號與多步移項。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '挑戰級主項轉換<br>分式與多項合併。' } ] },
+    'pricing': { name: '成本 / 售價 / 標價', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎折扣與利潤計算<br>百分比應用。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '標價與售價綜合<br>多步驟百分比運算。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '成本利潤反推<br>進階比例與百分比分析。' } ] },
+    'linear_equations': { name: '直線方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎截距與幾何判讀<br>補底基本功。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '單一圖像之係數正負號判別<br>穩固中游。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '雙線圖像與係數比較<br>拉分進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '高階代數不等式與交叉相乘<br>拔尖挑戰。' } ] },
+    'quadratic_equations': { name: '二次方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎二次方程求解<br>防漏根陷阱。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '根的性質與判別式 Δ<br>核心概念。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '兩根之和與兩根之積<br>韋達定理。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '高階代數變形與隱藏二次方程<br>拔尖。' } ] },
+    'simultaneous_equations': { name: '聯立方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '標準常規方程與直接代入<br>補底穩分。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2、DSE', desc: '連等式變換 A=B=C<br>核心基本題。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '真實生活情境與應用題<br>卷一常客。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '代數變換與跨課題綜合<br>拔尖神題。' } ] },
+    'vertex': { name: '頂點與二次圖像', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S4、DSE', desc: '基礎圖像特徵判讀<br>補底基本功。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S4、DSE', desc: '頂點式參數符號判讀<br>建基。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S4、DSE', desc: '對稱軸與交點<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S4、DSE', desc: '綜合高階推論與代數幾何轉換<br>拔尖。' } ] },
+    'functions_remainder': { name: '函數與餘式定理', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S4、DSE', desc: '基礎餘式定理與函數值<br>直接代入。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S4、DSE', desc: '基礎因式定理<br>求未知常數與餘數。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S4、DSE', desc: '函數代入與多項式恆等特性<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S4、DSE', desc: '進階定理綜合<br>兩步與聯立方程拔尖。' } ] },
+    'simple_inequalities': { name: '簡單不等式', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎一元一次不等式<br>單邊移項與變號。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2、DSE', desc: '雙邊變數與括號展開<br>常見題型。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '不等式性質推導與判斷<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '求極端整數解與三個分式不等式<br>拔尖。' } ] },
+    'compound_inequalities': { name: '複合不等式', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎一元一次不等式與性質判斷<br>建基補底。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '複合不等式與數軸交疊處理<br>常考核心。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '含分數與複雜代數變形<br>補強拔尖。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '進階推論、整數解計數與二次不等式<br>拔尖挑戰。' } ] },
+    'hcf_lcm': { name: 'H.C.F. / L.C.M.', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1、DSE', desc: '基礎 H.C.F.<br>補底。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1、DSE', desc: '基礎 L.C.M.<br>建基。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '逆向推導<br>單純變數。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '逆向推導綜合<br>拔尖。' } ] },
+    'percentage_change': { name: '百分變化', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎百分變化與數量計算<br>補底基本。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '連鎖複合關係與幾何公式變化<br>中游核心。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '加權百分數與二維交叉分類問題<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '高階代數聯立與未知數推導<br>拔尖。' } ] },
+    'compound_interest': { name: '複利息', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎本利和計算 (Amount)<br>補底。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '複利息計算 (Interest)<br>核心。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '逆向求本金<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '等比年金逆向推導<br>拔尖。' } ] }
 };
 
 let questionBank = [];
@@ -883,6 +895,18 @@ window.startHomework = function(hwName) {
                 else if (cfg.topic === 'expansion') qArr = generateExpansionQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'alg_frac_mul_div') qArr = generateAlgFracMulDivQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'triangle_area') qArr = generateTriangleAreaQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'change_of_subject') qArr = generateSubjectQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'pricing') qArr = generatePricingQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'linear_equations') qArr = generateLinearQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'quadratic_equations') qArr = generateQuadraticQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'simultaneous_equations') qArr = generateSimultaneousQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'vertex') qArr = generateVertexQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'functions_remainder') qArr = generateFunctionsRemainderQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'simple_inequalities') qArr = generateSimpleInequalitiesQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'compound_inequalities') qArr = generateInequalitiesQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'hcf_lcm') qArr = generateHcfLcmQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'percentage_change') qArr = generatePercentageQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'compound_interest') qArr = generateCompoundInterestQuestions(cfg.qCount, String(cfg.levelId));
             } catch(e) {
                 console.error(`Error generating ${cfg.topic}:`, e);
             }
@@ -925,7 +949,7 @@ function startGlobalMixed(level) {
         currentTopicName = '跨課題綜合挑戰';
         currentLevelPref = level;
 
-        let topicsList = ['indices', 'factorization', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area'];
+        let topicsList = ['indices', 'factorization', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area', 'change_of_subject', 'pricing', 'linear_equations', 'quadratic_equations', 'simultaneous_equations', 'vertex', 'functions_remainder', 'simple_inequalities', 'compound_inequalities', 'hcf_lcm', 'percentage_change', 'compound_interest'];
         
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         let selectedTopics = [];
@@ -961,6 +985,18 @@ function startGlobalMixed(level) {
                 else if (t === 'expansion') qArr = generateExpansionQuestions(1, lvl);
                 else if (t === 'alg_frac_mul_div') qArr = generateAlgFracMulDivQuestions(1, lvl);
                 else if (t === 'triangle_area') qArr = generateTriangleAreaQuestions(1, lvl);
+                else if (t === 'change_of_subject') qArr = generateSubjectQuestions(1, lvl);
+                else if (t === 'pricing') qArr = generatePricingQuestions(1, lvl);
+                else if (t === 'linear_equations') qArr = generateLinearQuestions(1, lvl);
+                else if (t === 'quadratic_equations') qArr = generateQuadraticQuestions(1, lvl);
+                else if (t === 'simultaneous_equations') qArr = generateSimultaneousQuestions(1, lvl);
+                else if (t === 'vertex') qArr = generateVertexQuestions(1, lvl);
+                else if (t === 'functions_remainder') qArr = generateFunctionsRemainderQuestions(1, lvl);
+                else if (t === 'simple_inequalities') qArr = generateSimpleInequalitiesQuestions(1, lvl);
+                else if (t === 'compound_inequalities') qArr = generateInequalitiesQuestions(1, lvl);
+                else if (t === 'hcf_lcm') qArr = generateHcfLcmQuestions(1, lvl);
+                else if (t === 'percentage_change') qArr = generatePercentageQuestions(1, lvl);
+                else if (t === 'compound_interest') qArr = generateCompoundInterestQuestions(1, lvl);
             } catch(e) {
                 console.error(`Error generating ${t}:`, e);
             }
@@ -1013,7 +1049,19 @@ function startGame(levelPref) {
         else if (currentTopic === 'expansion') questionBank = generateExpansionQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'alg_frac_mul_div') questionBank = generateAlgFracMulDivQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'triangle_area') questionBank = generateTriangleAreaQuestions(numQ, currentLevelPref);
-        
+        else if (currentTopic === 'change_of_subject') questionBank = generateSubjectQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'pricing') questionBank = generatePricingQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'linear_equations') questionBank = generateLinearQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'quadratic_equations') questionBank = generateQuadraticQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'simultaneous_equations') questionBank = generateSimultaneousQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'vertex') questionBank = generateVertexQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'functions_remainder') questionBank = generateFunctionsRemainderQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'simple_inequalities') questionBank = generateSimpleInequalitiesQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'compound_inequalities') questionBank = generateInequalitiesQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'hcf_lcm') questionBank = generateHcfLcmQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'percentage_change') questionBank = generatePercentageQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'compound_interest') questionBank = generateCompoundInterestQuestions(numQ, currentLevelPref);
+
         assignQuestionScores();
         assignHandwriting(questionBank);
 
