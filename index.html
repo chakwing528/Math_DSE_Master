@@ -151,6 +151,22 @@
         .katex .mathrm { font-style: normal; }
 
         /* ===========================================
+           📐 統一題目區內所有數式字體大小
+           （新舊課題的 inline / display 數式皆放大至一致尺寸）
+           =========================================== */
+        #questionText { font-size: 1.05rem; line-height: 1.7; }
+        #questionText .katex { font-size: 1.25em !important; }
+        #questionText .katex-display { margin: 0.8em 0 !important; font-size: 1.35em !important; }
+        @media (min-width: 640px) {
+            #questionText { font-size: 1.125rem; }
+            #questionText .katex { font-size: 1.3em !important; }
+            #questionText .katex-display { font-size: 1.45em !important; }
+        }
+        /* 確認彈窗 / 反饋區的 KaTeX 也同步放大 */
+        #hw-confirm-math .katex,
+        #feedbackMessage .katex { font-size: 1.15em !important; }
+
+        /* ===========================================
            🌊 通用工具類
            =========================================== */
 
@@ -450,6 +466,18 @@
                 <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('expansion'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">恆等式展開</button>
                 <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('alg_frac_mul_div'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-fuchsia-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">代數分式乘除</button>
                 <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('triangle_area'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-cyan-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">三角形面積</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('change_of_subject'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-pink-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">主項轉換</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('pricing'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-lime-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">成本售價標價</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('linear_equations'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-purple-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">直線方程</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('quadratic_equations'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">二次方程</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('simultaneous_equations'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">聯立方程</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('vertex'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-violet-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">頂點圖像</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('functions_remainder'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-blue-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">函數與餘式</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('simple_inequalities'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-rose-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">簡單不等式</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('compound_inequalities'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-red-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">複合不等式</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('hcf_lcm'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-green-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">H.C.F./L.C.M.</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('percentage_change'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-yellow-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">百分變化</button>
+                <button onclick="if(typeof selectTopic !== 'undefined') selectTopic('compound_interest'); else checkEnvironment();" class="topic-card group px-4 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-orange-400 hover:-translate-y-0.5 active:translate-y-0 transition-all text-center font-bold text-slate-800 text-sm sm:text-base" style="box-shadow: var(--shadow-subtle);">複利息</button>
             </div>
 
             <!-- 🏆 跨課題綜合挑戰 -->
@@ -921,7 +949,19 @@
     <script src="js/topics/expansion.js?v=71" defer></script>
     <script src="js/topics/algebraic_fractions_mul_div.js?v=71" defer></script>
     <script src="js/topics/triangle_area.js?v=71" defer></script>
-    <script src="js/app.js?v=71" defer></script>
+    <script src="js/topics/change_of_subject.js?v=72" defer></script>
+    <script src="js/topics/pricing.js?v=72" defer></script>
+    <script src="js/topics/compound_inequalities.js?v=72" defer></script>
+    <script src="js/topics/compound_interest.js?v=72" defer></script>
+    <script src="js/topics/functions_remainder.js?v=72" defer></script>
+    <script src="js/topics/hcf_lcm.js?v=72" defer></script>
+    <script src="js/topics/linear_equations.js?v=72" defer></script>
+    <script src="js/topics/percentage_change.js?v=72" defer></script>
+    <script src="js/topics/quadratic_equations.js?v=72" defer></script>
+    <script src="js/topics/simple_inequalities.js?v=72" defer></script>
+    <script src="js/topics/simultaneous_equations.js?v=72" defer></script>
+    <script src="js/topics/vertex.js?v=72" defer></script>
+    <script src="js/app.js?v=72" defer></script>
 
 </body>
 </html>
