@@ -1,9 +1,9 @@
 // js/topics/algebraic_fractions_mul_div.js
 
 // ==========================================
-// 專用錯誤提示訊息 (已修復變數衝突與遺漏)
+// 專屬錯誤提示訊息
 // ==========================================
-const msgFracMulDiv1 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 交叉相乘或約簡錯誤</div>`;
+const msgFracMulDiv1 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 乘除法則混淆 (除法需將後方分式倒轉)</div>`;
 const msgFracMulDiv2 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 指數定律或約簡計算錯誤</div>`;
 const msgFracMulDiv3 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 忘記變號：(x-y) 與 (y-x) 約簡應為 -1</div>`;
 const msgFracMulDiv4 = `<div class="text-red-600 font-bold text-lg mb-1">❗ 因式分解未完全或錯誤</div>`;
@@ -115,7 +115,7 @@ function formatVar(v, p) { return p === 0 ? "1" : (p === 1 ? v : `${v}^{${p}}`);
 // ==========================================
 function generateAlgFracMulDivQuestions(num, levelPref) {
     const bank = [];
-    const singleVars = ['x', 'y', 'm', 'n']; 
+    const singleVars = ['x', 'y', 'a', 'b', 'm', 'n']; 
     
     for (let i = 0; i < num; i++) {
         let levelType = levelPref;
@@ -136,8 +136,8 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
         // =====================================
         if (levelType === '1') {
             qObj.level = "⭐ 程度 1";
-            let v1 = singleVars[getRandomInt(0, 2)]; 
-            let v2 = singleVars[getRandomInt(2, 4)]; 
+            let v1 = singleVars[getRandomInt(0, 3)]; 
+            let v2 = singleVars[getRandomInt(3, 6)]; 
             
             let A = getRandomInt(2, 8), B = getRandomInt(2, 8);
             let C = getRandomInt(2, 8), D = getRandomInt(2, 8);
@@ -223,8 +223,8 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
         } else if (levelType === '2') {
             qObj.level = "⭐⭐ 程度 2";
             let type = getRandomInt(0, 2); 
-            let v = singleVars[getRandomInt(0, 2)];
-            let v2 = singleVars[getRandomInt(2, 4)];
+            let v = singleVars[getRandomInt(0, 3)];
+            let v2 = singleVars[getRandomInt(3, 6)];
             let b = getRandomInt(2, 6), c = getRandomInt(2, 6);
             let q1 = getRandomInt(1, 4), q2 = getRandomInt(1, 4);
             let k = getRandomInt(1, 6);
@@ -370,8 +370,8 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
         } else if (levelType === '3') {
             qObj.level = "⭐⭐⭐ 程度 3";
             let type = getRandomInt(0, 2); 
-            let v = singleVars[getRandomInt(0, 2)];
-            let v2 = singleVars[getRandomInt(2, 4)];
+            let v = singleVars[getRandomInt(0, 3)];
+            let v2 = singleVars[getRandomInt(3, 6)];
             let b = getRandomInt(2, 6), c = getRandomInt(2, 6);
             let q1 = getRandomInt(1, 4), q2 = getRandomInt(1, 4);
             
@@ -523,8 +523,8 @@ function generateAlgFracMulDivQuestions(num, levelPref) {
         // =====================================
         } else {
             qObj.level = "⭐⭐⭐⭐ 程度 4";
-            let v = singleVars[getRandomInt(0, 2)];
-            let v2 = singleVars[getRandomInt(2, 4)];
+            let v = singleVars[getRandomInt(0, 3)];
+            let v2 = singleVars[getRandomInt(3, 6)];
             let b = getRandomInt(2, 6), c = getRandomInt(2, 6);
             let q1 = getRandomInt(1, 4), q2 = getRandomInt(1, 4);
             
