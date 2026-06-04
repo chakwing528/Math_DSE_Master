@@ -21,7 +21,7 @@ function createSvgAxis() {
     `;
 }
 
-function wrapSvg(content) {
+function _linWrapSvg(content) {
     return `
     <div class="flex justify-center my-4">
         <svg width="200" height="200" viewBox="0 0 200 200" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -36,7 +36,7 @@ function wrapSvg(content) {
     </div>`;
 }
 
-function shuffle(array) {
+function _linShuffle(array) {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
@@ -74,7 +74,7 @@ function generateLinearQuestions(num, levelPref) {
                 let y_int = Math.floor(Math.random() * 3) + 2; // 2 to 4
                 
                 // L1: x = x_int, L2: ax+by=c sharing intercepts
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="${100 + x_int*15}" y1="20" x2="${100 + x_int*15}" y2="180" stroke="#ef4444" stroke-width="2" />
                     <line x1="20" y1="${100 + y_int*18}" x2="${100 + x_int*18}" y2="20" stroke="#3b82f6" stroke-width="2" />
                     <text x="${100 + x_int*15 + 5}" y="40" fill="#ef4444" font-size="12">L₁</text>
@@ -102,7 +102,7 @@ function generateLinearQuestions(num, levelPref) {
             } else if (subType === 1) {
                 // Type 1: 水平線與垂直線的方程判斷
                 let k = Math.floor(Math.random() * 3) + 3; // 3,4,5
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="10" y1="${100 + k*15}" x2="190" y2="${100 + k*15}" stroke="#ef4444" stroke-width="2" />
                     <text x="20" y="${100 + k*15 - 8}" fill="#ef4444" font-size="12">L</text>
                     <circle cx="100" cy="${100 + k*15}" r="3" fill="#000" />
@@ -122,7 +122,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else {
                 // Type 2: 已知兩點求斜率的圖形驗證
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="30" y1="150" x2="170" y2="40" stroke="#10b981" stroke-width="2" />
                     <circle cx="60" cy="126" r="3" fill="#000" />
                     <circle cx="140" cy="64" r="3" fill="#000" />
@@ -148,7 +148,7 @@ function generateLinearQuestions(num, levelPref) {
             
             if (subType === 0) {
                 // Type 0: x + ay + b = 0 類型 仿 2013 Q14
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="40" x2="160" y2="180" stroke="#3b82f6" stroke-width="2" />
                     <text x="140" y="150" fill="#3b82f6" font-size="12">L</text>
                 `);
@@ -170,7 +170,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else if (subType === 1) {
                 // Type 1: ax + by = 1 圖像判讀正負
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="30" y1="40" x2="180" y2="140" stroke="#8b5cf6" stroke-width="2" />
                     <text x="160" y="110" fill="#8b5cf6" font-size="12">L</text>
                 `);
@@ -189,7 +189,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else {
                 // Type 2: y = mx + c 的反向圖像選擇
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="160" x2="180" y2="60" stroke="#f59e0b" stroke-width="2" />
                 `);
                 qObj.question = `${svgHtml}<div class="mb-4 text-base sm:text-lg text-slate-600">若常數 \\( m > 0 \\) 且 \\( c < 0 \\)，上圖最可能是下列哪條直線的圖像？</div>`;
@@ -211,7 +211,7 @@ function generateLinearQuestions(num, levelPref) {
             
             if (subType === 0) {
                 // Type 0: 兩線交於正y軸 仿 2014 Q25
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="40" x2="180" y2="160" stroke="#ef4444" stroke-width="2" />
                     <line x1="20" y1="160" x2="180" y2="40" stroke="#3b82f6" stroke-width="2" />
                     <text x="160" y="150" fill="#ef4444" font-size="12">L₁</text>
@@ -234,7 +234,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else if (subType === 1) {
                 // Type 1: 垂直線與斜線比較 仿 2015 Q25
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="60" y1="10" x2="60" y2="190" stroke="#ef4444" stroke-width="2" />
                     <line x1="20" y1="150" x2="160" y2="20" stroke="#3b82f6" stroke-width="2" />
                     <text x="45" y="30" fill="#ef4444" font-size="12">L₁</text>
@@ -256,7 +256,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else {
                 // Type 2: 兩條平行斜線的係數比較
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="120" x2="160" y2="20" stroke="#10b981" stroke-width="2" />
                     <line x1="50" y1="170" x2="190" y2="70" stroke="#f59e0b" stroke-width="2" />
                     <text x="140" y="55" fill="#10b981" font-size="12">L₁</text>
@@ -281,7 +281,7 @@ function generateLinearQuestions(num, levelPref) {
             
             if (subType === 0) {
                 // Type 0: ax+y=b 與 cx+y=d 交叉相乘 仿 2012 Q25
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="50" x2="180" y2="130" stroke="#ef4444" stroke-width="2" />
                     <line x1="20" y1="30" x2="150" y2="180" stroke="#3b82f6" stroke-width="2" />
                     <text x="160" y="110" fill="#ef4444" font-size="12">L₁</text>
@@ -306,7 +306,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else if (subType === 1) {
                 // Type 1: 係數乘積正負號的綜合推演
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="20" y1="160" x2="160" y2="20" stroke="#8b5cf6" stroke-width="2" />
                     <text x="140" y="50" fill="#8b5cf6" font-size="12">L: ax+by=1</text>
                 `);
@@ -324,7 +324,7 @@ function generateLinearQuestions(num, levelPref) {
                 ];
             } else {
                 // Type 2: 垂直線與變量斜率的乘積關係
-                let svgHtml = wrapSvg(`
+                let svgHtml = _linWrapSvg(`
                     <line x1="140" y1="10" x2="140" y2="190" stroke="#ef4444" stroke-width="2" />
                     <line x1="20" y1="160" x2="180" y2="40" stroke="#3b82f6" stroke-width="2" />
                     <text x="145" y="30" fill="#ef4444" font-size="12">L₁: px=1</text>
@@ -353,7 +353,7 @@ function generateLinearQuestions(num, levelPref) {
         }
         options = options.slice(0, 4);
 
-        qObj.options = shuffle(options).map((opt, idx) => ({
+        qObj.options = _linShuffle(options).map((opt, idx) => ({
             ...opt,
             id: String.fromCharCode(65 + idx)
         }));

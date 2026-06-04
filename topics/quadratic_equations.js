@@ -25,7 +25,7 @@ function formatQuad(a, b, c) {
     return res === "" ? "0" : res;
 }
 
-function shuffle(array) {
+function _qdShuffle(array) {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
@@ -335,7 +335,7 @@ function generateQuadraticQuestions(num, levelPref) {
         }
         options = options.slice(0, 4);
 
-        qObj.options = shuffle(options).map((opt, idx) => ({
+        qObj.options = _qdShuffle(options).map((opt, idx) => ({
             ...opt,
             id: String.fromCharCode(65 + idx)
         }));

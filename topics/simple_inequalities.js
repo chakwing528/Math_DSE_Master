@@ -3,12 +3,12 @@
 // ==========================================
 // 基礎不等式專用錯誤提示訊息 (無 及/或 邏輯)
 // ==========================================
-const msgIneqSign = `<div class="text-red-600 font-bold text-lg mb-1">❗ 負數變號錯誤</div><div class="text-sm text-slate-500 mb-2">當不等式兩邊同時乘以或除以一個負數時，不等號的方向必須反轉（例如：\\(>\\) 變成 \\(<\\)）。</div>`;
+const msgSimpleIneqSign = `<div class="text-red-600 font-bold text-lg mb-1">❗ 負數變號錯誤</div><div class="text-sm text-slate-500 mb-2">當不等式兩邊同時乘以或除以一個負數時，不等號的方向必須反轉（例如：\\(>\\) 變成 \\(<\\)）。</div>`;
 const msgIneqFrac = `<div class="text-red-600 font-bold text-lg mb-1">❗ 分數展開或移項錯誤</div><div class="text-sm text-slate-500 mb-2">同乘公倍數消去分母時，請確保每一項都有乘到；若分子有負號，展開時括號內的每一項都要變號（特別注意負負得正）。</div>`;
 const msgIneqProp = `<div class="text-red-600 font-bold text-lg mb-1">❗ 不等式性質理解錯誤</div><div class="text-sm text-slate-500 mb-2">請注意：<br>1. 同乘/除負數要變號。<br>2. 倒數性質：若 \\(a > b > 0\\)，則 \\(\\frac{1}{a} < \\frac{1}{b}\\)。<br>3. 平方性質：若涉及負數，平方後的大小關係可能會改變。</div>`;
 const msgIneqInt = `<div class="text-red-600 font-bold text-lg mb-1">❗ 極值整數選取錯誤</div><div class="text-sm text-slate-500 mb-2">尋找最大或最小整數時，請注意不等號是否包含等號（\\(\\le\\) 或 \\(\\ge\\)）。例如 \\(x < 3\\) 的最大整數是 2，而 \\(x \\le 3\\) 的最大整數是 3。</div>`;
 
-function shuffle(array) {
+function _siShuffle(array) {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);
@@ -18,11 +18,11 @@ function shuffle(array) {
     return array;
 }
 
-function buildEq(steps) {
+function _siBuildEq(steps) {
     return steps.map(s => `<div class="my-1">${s.text}</div>`).join('');
 }
 
-function wrapHint(msg, stepsHtml) {
+function _siWrapHint(msg, stepsHtml) {
     return `
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
             ${msg}
@@ -75,10 +75,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `兩邊同除以正數 ${a} (不變號)：\\( ${v} > ${ans} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} > ${ans + 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) },
-                    { text: `\\( ${v} < ${ans + 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) }
+                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} > ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
                 ];
             } else if (subType === 1) {
                 // Type 1: b - ax >= c (負係數，需變號)
@@ -94,10 +94,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `兩邊同除以負數 -${a} <b>(注意：必須反轉不等號)</b>：\\( ${v} \\le ${ans} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans + 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans + 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) }
+                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\le ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\ge ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
                 ];
             } else {
                 // Type 2: 基礎分數 (v/a - b < c)
@@ -114,10 +114,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `兩邊同乘以正數 ${a}：\\( ${v} < ${ans_val} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} < ${ans_val} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} > ${ans_val} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} < ${c + b - a} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) },
-                    { text: `\\( ${v} > ${c + b - a} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) }
+                    { text: `\\( ${v} < ${ans_val} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} > ${ans_val} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${c + b - a} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: `\\( ${v} > ${c + b - a} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
                 ];
             }
 
@@ -139,10 +139,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `兩邊同除以負數 ${a-c} <b>(注意變號)</b>：\\( ${v} > ${ans} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} > ${ans + 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) },
-                    { text: `\\( ${v} < ${ans + 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) }
+                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} > ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
                 ];
             } else if (subType === 1) {
                 // Type 1: 帶括號展開 a(x - b) >= cx - d
@@ -161,10 +161,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `除以正數 ${a-c}：\\( ${v} \\ge ${ans} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans + 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans + 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) }
+                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\ge ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\le ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
                 ];
             } else {
                 // Type 2: 單邊帶分數的雙邊變數 (ax - b)/c > x - d
@@ -185,10 +185,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `求得：\\( ${v} > ${ansStr} \\)`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${v} > ${ansStr} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} < ${ansStr} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} > \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：右邊常數項忘記乘分母。</div>", buildEq(steps)) },
-                    { text: `\\( ${v} < \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac, buildEq(steps)) }
+                    { text: `\\( ${v} > ${ansStr} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} < ${ansStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} > \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：右邊常數項忘記乘分母。</div>", _siBuildEq(steps)) },
+                    { text: `\\( ${v} < \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
                 ];
             }
 
@@ -204,10 +204,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `III. 因為 \\( k < 0 \\)，所以平方後 \\( k^2 > 0 \\)。同乘正數不變號，故 \\( ak^2 > bk^2 \\) 正確。`, hide: false }
                 ];
                 options = [
-                    { text: `I、II 及 III`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `只有 I 及 II`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) }
+                    { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
                 ];
             } else if (subType === 1) {
                 // Type 1: 負數範圍 a < b < 0
@@ -218,10 +218,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `III. 兩個負數相加必定小於零，故 \\( a + b < 0 \\)，III 錯誤。`, hide: false }
                 ];
                 options = [
-                    { text: `只有 I 及 II`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `I、II 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) }
+                    { text: `只有 I 及 II`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `I、II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
                 ];
             } else {
                 // Type 2: 正數範圍 x > y > 0
@@ -232,10 +232,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `III. 同號正數倒數後方向反轉，故 \\( \\frac{1}{x} < \\frac{1}{y} \\) 正確。`, hide: false }
                 ];
                 options = [
-                    { text: `I、II 及 III`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `只有 I 及 II`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: wrapHint(msgIneqProp, buildEq(steps)) }
+                    { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
                 ];
             }
 
@@ -263,10 +263,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `小於 ${limit} 的最大整數為 ${maxInt}。`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${maxInt} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${Math.ceil(limit)} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) },
-                    { text: `\\( ${maxInt - 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) },
-                    { text: `\\( ${maxInt + 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) }
+                    { text: `\\( ${maxInt} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${Math.ceil(limit)} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: `\\( ${maxInt - 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: `\\( ${maxInt + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
                 ];
             } else if (subType === 1) {
                 // Type 1: 求最小整數解 (分式)
@@ -287,10 +287,10 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                     { text: `大於或等於 ${limit} 的最小整數為 ${minInt}。`, hide: false }
                 ];
                 options = [
-                    { text: `\\( ${minInt} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${Math.floor(limit)} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) },
-                    { text: `\\( ${minInt + 1} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) },
-                    { text: `\\( ${minInt - 2} \\)`, isCorrect: false, hint: wrapHint(msgIneqInt, buildEq(steps)) }
+                    { text: `\\( ${minInt} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${Math.floor(limit)} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: `\\( ${minInt + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: `\\( ${minInt - 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
                 ];
             } else {
                 // Type 2: 三個分式組成的不等式 (中二拔尖：公倍數與負號分配)
@@ -373,19 +373,19 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
                 ];
 
                 options = [
-                    { text: `\\( ${v} \\le ${ansStr} \\)`, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ansStr} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) },
-                    { text: `\\( ${v} \\le ${wAnsStr} \\)`, isCorrect: false, hint: wrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：展開括號時，- (Cx - D) 後面常數項應為 + D。</div>", buildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${wAnsStr} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign + "<br>" + msgIneqFrac, buildEq(steps)) }
+                    { text: `\\( ${v} \\le ${ansStr} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\ge ${ansStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\le ${wAnsStr} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：展開括號時，- (Cx - D) 後面常數項應為 + D。</div>", _siBuildEq(steps)) },
+                    { text: `\\( ${v} \\ge ${wAnsStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign + "<br>" + msgIneqFrac, _siBuildEq(steps)) }
                 ];
             }
         }
 
         options = [...new Map(options.map(item => [item.text, item])).values()];
         while(options.length < 4) {
-            options.push({ text: `\\( x > ${options.length * 5} \\)`, isCorrect: false, hint: wrapHint(msgIneqSign, buildEq(steps)) });
+            options.push({ text: `\\( x > ${options.length * 5} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) });
         }
-        qObj.options = shuffle(options).map((opt, idx) => ({
+        qObj.options = _siShuffle(options).map((opt, idx) => ({
             ...opt,
             id: String.fromCharCode(65 + idx)
         }));
