@@ -46,7 +46,7 @@ function generatePricingQuestions(num, levelPref) {
             let p2Sign = isProfit2 ? "+" : "-";
             let p2Multiplier = isProfit2 ? (1 + p2/100) : (1 - p2/100);
 
-            questionMathStr = `\\text{偉明以 } \\$${C} \\text{ 購入某物品，之後他將該物品售予素珊並獲利 } ${p1}\\% \\text{。素珊應以甚麼價錢出售該物品才可}${p2Text} ${p2}\\% \\text{？}`;
+            questionMathStr = `偉明以 \\( \\$${C} \\) 購入某物品，之後他將該物品售予素珊並獲利 \\( ${p1}\\% \\)。素珊應以甚麼價錢出售該物品才可${p2Text} \\( ${p2}\\% \\)？`;
 
             let sp1 = C * (1 + p1/100);
             let finalSP = sp1 * p2Multiplier;
@@ -55,10 +55,10 @@ function generatePricingQuestions(num, levelPref) {
             steps.push({ text: `\\text{素珊的最終售價} = \\$${sp1} \\times (1 ${p2Sign} ${p2}\\%)`, hide: false });
             steps.push({ text: `= \\$${finalSP}`, hide: false });
 
-            let correctStr = `\\$${finalSP}`;
-            let w1 = `\\$${C * (1 + (isProfit2 ? p1+p2 : p1-p2)/100)}`; // 錯誤相加
-            let w2 = `\\$${C * (1 + p1/100) * (isProfit2 ? (1-p2/100) : (1+p2/100))}`; // 獲利/虧蝕搞反
-            let w3 = `\\$${C * (1 + p1/100 + (isProfit2 ? p2/100 : -p2/100) + 0.1)}`; // 隨機干擾
+            let correctStr = `\\( \\$${finalSP} \\)`;
+            let w1 = `\\( \\$${C * (1 + (isProfit2 ? p1+p2 : p1-p2)/100)} \\)`; // 錯誤相加
+            let w2 = `\\( \\$${C * (1 + p1/100) * (isProfit2 ? (1-p2/100) : (1+p2/100))} \\)`; // 獲利/虧蝕搞反
+            let w3 = `\\( \\$${C * (1 + p1/100 + (isProfit2 ? p2/100 : -p2/100) + 0.1)} \\)`; // 隨機干擾
 
             options = [
                 { text: correctStr, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
@@ -78,7 +78,7 @@ function generatePricingQuestions(num, levelPref) {
             let conf = configs[getRandomInt(0, configs.length)];
             let S = conf.lcm * conf.mults[getRandomInt(0, conf.mults.length)];
 
-            questionMathStr = `\\text{小麗售出兩個手袋，每個手袋的售價均為 } \\$${S}\\text{，其中一個獲利 } ${conf.p}\\% \\text{，而另一個則虧蝕 } ${conf.p}\\% \\text{。完成該兩項交易後，小麗}`;
+            questionMathStr = `小麗售出兩個手袋，每個手袋的售價均為 \\( \\$${S} \\)，其中一個獲利 \\( ${conf.p}\\% \\)，而另一個則虧蝕 \\( ${conf.p}\\% \\)。完成該兩項交易後，小麗：`;
 
             let c1 = S / (1 + conf.p/100);
             let c2 = S / (1 - conf.p/100);
@@ -94,11 +94,11 @@ function generatePricingQuestions(num, levelPref) {
             steps.push({ text: `\\text{整體結果} = \\text{總售價} - \\text{總成本} = ${totalS} - ${totalC} = -${lossAmt}`, hide: false });
             steps.push({ text: `\\therefore \\text{虧蝕 } \\$${lossAmt}`, hide: false });
 
-            let correctStr = `\\text{虧蝕 } \\$${lossAmt}`;
-            let w1 = `\\text{既無獲利，又無虧蝕}`;
-            let w2 = `\\text{獲利 } \\$${lossAmt}`;
+            let correctStr = `\\( \\text{虧蝕 } \\$${lossAmt} \\)`;
+            let w1 = `\\( \\text{既無獲利，又無虧蝕} \\)`;
+            let w2 = `\\( \\text{獲利 } \\$${lossAmt} \\)`;
             let fakeLoss = (totalS * (conf.p/100)).toFixed(0);
-            let w3 = `\\text{虧蝕 } \\$${fakeLoss}`;
+            let w3 = `\\( \\text{虧蝕 } \\$${fakeLoss} \\)`;
 
             options = [
                 { text: correctStr, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
@@ -125,7 +125,7 @@ function generatePricingQuestions(num, levelPref) {
             
             let discountText = getDiscountText(sc.d);
             
-            questionMathStr = `\\text{某外套的標價較其成本高 } ${sc.m}\\%\\text{。該外套以其標價}${discountText}\\text{售出並獲利 } \\$${P} \\text{。求該外套的成本。}`;
+            questionMathStr = `某外套的標價較其成本高 \\( ${sc.m}\\% \\)。該外套以其標價${discountText}售出並獲利 \\( \\$${P} \\)。求該外套的成本。`;
 
             steps.push({ text: `\\text{設成本為 } x`, hide: false });
             steps.push({ text: `\\text{標價} = x(1 + ${sc.m}\\%) = ${1 + sc.m/100}x`, hide: false });
@@ -136,10 +136,10 @@ function generatePricingQuestions(num, levelPref) {
             steps.push({ text: `${P} = ${sc.rate.toFixed(2)}x`, hide: false });
             steps.push({ text: `x = ${C}`, hide: false });
 
-            let correctStr = `\\$${C}`;
-            let w1 = `\\$${Math.round(P / (sc.m/100 - sc.d/100))}`; // 錯誤方程式
-            let w2 = `\\$${Math.round(C * (1 + sc.rate))}`; // 誤算為售價
-            let w3 = `\\$${C + 120}`; // 隨機干擾
+            let correctStr = `\\( \\$${C} \\)`;
+            let w1 = `\\( \\$${Math.round(P / (sc.m/100 - sc.d/100))} \\)`; // 錯誤方程式
+            let w2 = `\\( \\$${Math.round(C * (1 + sc.rate))} \\)`; // 誤算為售價
+            let w3 = `\\( \\$${C + 120} \\)`; // 隨機干擾
 
             options = [
                 { text: correctStr, isCorrect: true, hint: wrapHint(msgCorrect, buildEq(steps)) },
@@ -161,7 +161,7 @@ function generatePricingQuestions(num, levelPref) {
         
         let fallbackAmt = 50;
         while(finalOptions.length < 4) {
-            let altText = `\\$${parseInt(correctStr.replace(/[^0-9]/g, '')) + fallbackAmt}`;
+            let altText = `\\( \\$${parseInt(correctStr.replace(/[^0-9]/g, '')) + fallbackAmt} \\)`;
             if (!texts.includes(altText)) {
                 texts.push(altText);
                 finalOptions.push({ text: altText, isCorrect: false, hint: wrapHint(msgPricing1, buildEq(steps)) });
@@ -173,8 +173,8 @@ function generatePricingQuestions(num, levelPref) {
         
         qObj.question = `
         <div class="mb-4 text-base sm:text-lg text-slate-600">解答以下百分數應用題：</div>
-        <div class="text-lg sm:text-xl font-bold text-indigo-700 py-4 w-full" style="line-height: 1.8;">
-            \\( \\displaystyle ${questionMathStr} \\)
+        <div class="text-base sm:text-lg font-bold text-indigo-700 py-4 w-full leading-relaxed whitespace-normal break-words" style="line-height: 1.9; word-break: break-word; white-space: normal !important; max-width: 100%; overflow-wrap: break-word;">
+            ${questionMathStr}
         </div>`;
         
         bank.push(qObj);

@@ -19,7 +19,38 @@ function _siShuffle(array) {
 }
 
 function _siBuildEq(steps) {
-    return steps.map(s => `<div class="my-1">${s.text}</div>`).join('');
+    // 🌟 自動將「標籤：\\( LHS op RHS \\)」每步格式重排為 LaTeX aligned，
+    //    使不等號 (< / > / \le / \ge / =) 跨步驟垂直對齊。
+    const INEQ_REGEX = /\\le|\\ge|\\neq|<|>|=/;
+    const rows = [];
+    const fallback = [];
+
+    for (const s of steps) {
+        const text = String(s.text);
+        const colonIdx = text.indexOf('：');
+        let label = '', mathPart = text;
+        if (colonIdx >= 0) {
+            label = text.substring(0, colonIdx);
+            mathPart = text.substring(colonIdx + 1);
+        }
+        const mathMatch = mathPart.match(/\\\(\s*(.+?)\s*\\\)/);
+        if (!mathMatch) { fallback.push(`<div class="my-1">${text}</div>`); continue; }
+        const math = mathMatch[1].trim();
+        const opMatch = INEQ_REGEX.exec(math);
+        if (!opMatch) { fallback.push(`<div class="my-1">${text}</div>`); continue; }
+        const op = opMatch[0];
+        const lhs = math.substring(0, opMatch.index).trim();
+        const rhs = math.substring(opMatch.index + op.length).trim();
+        // 去掉 HTML tags（如 <b>），KaTeX 的 \text 不支援 HTML
+        const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
+        const labelTex = cleanLabel ? ` && \\text{${cleanLabel}}` : '';
+        rows.push(`${lhs} &${op} ${rhs}${labelTex}`);
+    }
+
+    if (rows.length === 0) return fallback.join('');
+
+    const aligned = `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
+    return `<div class="my-2 text-center overflow-x-auto math-scroll">${aligned}</div>` + fallback.join('');
 }
 
 function _siWrapHint(msg, stepsHtml) {
@@ -126,16 +157,21 @@ function generateSimpleInequalitiesQuestions(num, levelPref) {
             
             if (subType === 0) {
                 // Type 0: ax - b < cx - d (需變號情況)
-                let a = Math.floor(Math.random() * 3) + 2; 
+                let a = Math.floor(Math.random() * 3) + 2;
                 let c = a + Math.floor(Math.random() * 3) + 1; // c > a
-                let ans = Math.floor(Math.random() * 5) + 2; 
+                let ans = Math.floor(Math.random() * 5) + 2;
                 let d = Math.floor(Math.random() * 10) + 1;
                 let b = d + (a - c) * ans;
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${a}${v} - ${b} < ${c}${v} - ${d} \\)。</div>`;
+
+                // 🌟 b 可能為負，需動態決定 +/- 符號避免 "- -14"
+                let bSign = b >= 0 ? `- ${b}` : `+ ${-b}`;
+                let bdDiff = b - d;
+                let bdSign = bdDiff >= 0 ? `${bdDiff}` : `${bdDiff}`; // 直接顯示，會自動帶 -
+
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${a}${v} ${bSign} < ${c}${v} - ${d} \\)。</div>`;
                 steps = [
-                    { text: `將變數移至左邊，常數移至右邊：\\( ${a}${v} - ${c}${v} < ${b} - ${d} \\)`, hide: false },
-                    { text: `化簡：\\( ${a-c}${v} < ${b-d} \\)`, hide: true },
+                    { text: `將變數移至左邊，常數移至右邊：\\( ${a}${v} - ${c}${v} < ${b >= 0 ? `${b} - ${d}` : `-${-b} - ${d}`} \\)`, hide: false },
+                    { text: `化簡：\\( ${a-c}${v} < ${bdSign} \\)`, hide: true },
                     { text: `兩邊同除以負數 ${a-c} <b>(注意變號)</b>：\\( ${v} > ${ans} \\)`, hide: false }
                 ];
                 options = [
