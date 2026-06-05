@@ -166,6 +166,18 @@
         #hw-confirm-math .katex,
         #feedbackMessage .katex { font-size: 1.15em !important; }
 
+        /* 題目區內所有區塊強制可換行（防止應用題長句橫向溢出） */
+        #questionText,
+        #questionText > div,
+        #questionText p {
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100%;
+        }
+        /* KaTeX inline math 自身不換行，但允許父容器在 math span 之間找斷點 */
+        #questionText .katex { white-space: nowrap; }
+
         /* ===========================================
            🌊 通用工具類
            =========================================== */
@@ -939,29 +951,29 @@
     <!-- ========================================== -->
     <!-- 🌟 強制破除快取 (v=71) 加上 defer 確保載入順序 -->
     <!-- ========================================== -->
-    <script src="js/utils.js?v=71" defer></script>
-    <script src="topics/indices.js?v=71" defer></script>
-    <script src="topics/factorization.js?v=71" defer></script>
-    <script src="topics/rounding.js?v=71" defer></script>
-    <script src="topics/identities.js?v=71" defer></script>
-    <script src="topics/fractions.js?v=71" defer></script>
-    <script src="topics/binary.js?v=71" defer></script>
-    <script src="topics/expansion.js?v=71" defer></script>
-    <script src="topics/algebraic_fractions_mul_div.js?v=71" defer></script>
-    <script src="topics/triangle_area.js?v=71" defer></script>
-    <script src="topics/change_of_subject.js?v=72" defer></script>
-    <script src="topics/pricing.js?v=72" defer></script>
-    <script src="topics/compound_inequalities.js?v=72" defer></script>
-    <script src="topics/compound_interest.js?v=72" defer></script>
-    <script src="topics/functions_remainder.js?v=72" defer></script>
-    <script src="topics/hcf_lcm.js?v=72" defer></script>
-    <script src="topics/linear_equations.js?v=72" defer></script>
-    <script src="topics/percentage_change.js?v=72" defer></script>
-    <script src="topics/quadratic_equations.js?v=72" defer></script>
-    <script src="topics/simple_inequalities.js?v=72" defer></script>
-    <script src="topics/simultaneous_equations.js?v=72" defer></script>
-    <script src="topics/vertex.js?v=72" defer></script>
-    <script src="js/app.js?v=72" defer></script>
+    <script src="js/utils.js?v=73" defer></script>
+    <script src="topics/indices.js?v=73" defer></script>
+    <script src="topics/factorization.js?v=73" defer></script>
+    <script src="topics/rounding.js?v=73" defer></script>
+    <script src="topics/identities.js?v=73" defer></script>
+    <script src="topics/fractions.js?v=73" defer></script>
+    <script src="topics/binary.js?v=73" defer></script>
+    <script src="topics/expansion.js?v=73" defer></script>
+    <script src="topics/algebraic_fractions_mul_div.js?v=73" defer></script>
+    <script src="topics/triangle_area.js?v=73" defer></script>
+    <script src="topics/change_of_subject.js?v=73" defer></script>
+    <script src="topics/pricing.js?v=73" defer></script>
+    <script src="topics/compound_inequalities.js?v=73" defer></script>
+    <script src="topics/compound_interest.js?v=73" defer></script>
+    <script src="topics/functions_remainder.js?v=73" defer></script>
+    <script src="topics/hcf_lcm.js?v=73" defer></script>
+    <script src="topics/linear_equations.js?v=73" defer></script>
+    <script src="topics/percentage_change.js?v=73" defer></script>
+    <script src="topics/quadratic_equations.js?v=73" defer></script>
+    <script src="topics/simple_inequalities.js?v=73" defer></script>
+    <script src="topics/simultaneous_equations.js?v=73" defer></script>
+    <script src="topics/vertex.js?v=73" defer></script>
+    <script src="js/app.js?v=73" defer></script>
 
 </body>
 </html>
