@@ -114,13 +114,34 @@ function buildEq(rawSteps) {
                     查看詳細步驟
                 </summary>
                 <div class="mt-2 pl-5 border-l-2 border-indigo-200 flex flex-col w-full overflow-x-auto math-scroll">
-                    ${foldEqs.map(s => `<div class="my-2">\\( \\displaystyle = ${s} \\)</div>`).join('')}
+                    ${foldEqs.map(s => {
+                        // 🛡️ 同步防呆：若摺疊步驟內已含 \\( 或裸中文則不再外包
+                        let hasInline = s.includes('\\(') || s.includes('\\[');
+                        let hasBareCJK = /[一-鿿]/.test(s) && !/\\text\s*\{[^}]*[一-鿿]/.test(s);
+                        if (hasInline || hasBareCJK) return `<div class="my-2">= ${s}</div>`;
+                        return `<div class="my-2">\\( \\displaystyle = ${s} \\)</div>`;
+                    }).join('')}
                 </div>
             </details>
             `;
         } else {
-            let prefix = isFirst ? '' : '= ';
-            html += `<div class="my-2 w-full">\\( \\displaystyle ${prefix}${steps[i].text} \\)</div>`;
+            // 🌟 步驟內已含「=」或「\begin{aligned}」時，不再前置「= 」避免雙重等號
+            let txt = steps[i].text;
+            let hasOwnEq = /(?:\\begin\{aligned\})|(?<!\\)=/.test(txt);
+            let prefix = (isFirst || hasOwnEq) ? '' : '= ';
+
+            // 🛡️ 自動偵測：若 step 文字已含 inline math (\\( \\)) 或裸中文字符，
+            //    則不再外包 \\(\\displaystyle ...\\) 避免「嵌套分隔符」導致 KaTeX 解析失敗。
+            //    交由 KaTeX auto-render 自行掃描內部 \\( \\) 渲染數學。
+            let hasInlineMath = txt.includes('\\(') || txt.includes('\\[');
+            // 裸中文：有中文字但又沒被 \text{...} 包住的情況視為混合內容
+            let hasBareChinese = /[一-鿿]/.test(txt) && !/\\text\s*\{[^}]*[一-鿿]/.test(txt);
+
+            if (hasInlineMath || hasBareChinese) {
+                html += `<div class="my-2 w-full">${prefix}${txt}</div>`;
+            } else {
+                html += `<div class="my-2 w-full">\\( \\displaystyle ${prefix}${txt} \\)</div>`;
+            }
             isFirst = false;
         }
     }
