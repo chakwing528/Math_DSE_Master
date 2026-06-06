@@ -91,17 +91,14 @@ function filterUniqueSteps(steps) {
 }
 
 // 構建數學算式與摺疊步驟的 HTML
-// 🎯 智能對齊嘗試：若所有非折疊步驟皆符合「標籤：\\( LHS op RHS \\)」格式，
-//    則合併為 LaTeX \\begin{aligned} 區塊，使 =/</>/\\le/\\ge 跨步驟垂直對齊。
-function tryAlignedRender(steps) {
-    if (!steps || steps.length < 2) return null;
+// 🎯 將一組步驟解析為 LaTeX aligned rows
+//    回傳：成功 → aligned LaTeX 字串；失敗（任一步驟不符）→ null
+function buildAlignedBlock(stepGroup) {
+    if (!stepGroup || stepGroup.length < 2) return null;
     const OP_REGEX = /\\\\leq|\\\\geq|\\\\le|\\\\ge|\\\\neq|\\\\equiv|<=|>=|<|>|=/;
     const rows = [];
-    const folded = []; // 折疊步驟保持原樣
-    for (const s of steps) {
-        if (s.hide) { folded.push(s); continue; }
-        const text = String(s.text);
-        // 支援全/半形冒號
+    for (const s of stepGroup) {
+        const text = String(s.text || s);
         let colonIdx = text.indexOf('：');
         if (colonIdx < 0) colonIdx = text.indexOf(':');
         let label = '', mathPart = text;
@@ -109,46 +106,74 @@ function tryAlignedRender(steps) {
             label = text.substring(0, colonIdx);
             mathPart = text.substring(colonIdx + 1);
         }
-        // 抽取 \\( ... \\) 內的純數學
         const mathMatch = mathPart.match(/\\\(\s*([\s\S]+?)\s*\\\)/);
-        if (!mathMatch) return null; // 任一步驟不符即放棄對齊
+        if (!mathMatch) return null;
         const math = mathMatch[1].trim();
-        // 排除 \\begin{aligned} 內含的（避免雙重）
         if (/\\begin\{aligned\}/.test(math)) return null;
         const opMatch = OP_REGEX.exec(math);
         if (!opMatch) return null;
         const op = opMatch[0];
         const lhs = math.substring(0, opMatch.index).trim();
         const rhs = math.substring(opMatch.index + op.length).trim();
-        if (!lhs || !rhs) return null; // 缺項則放棄
-        // 移除 HTML 標籤（\\text 不支援）
+        if (!lhs || !rhs) return null;
         const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
         const labelTex = cleanLabel ? ` && \\text{${cleanLabel}}` : '';
         rows.push(`${lhs} &${op} ${rhs}${labelTex}`);
     }
-    if (rows.length < 2) return null; // 至少 2 行才值得對齊
-    const aligned = `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
-    let html = `<div class="my-2 text-center overflow-x-auto math-scroll">${aligned}</div>`;
-    // 折疊步驟另起 details 區塊
-    if (folded.length > 0) {
+    if (rows.length < 2) return null;
+    return `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
+}
+
+// 🎯 智能對齊嘗試：把可見步驟組成 aligned 區塊；摺疊步驟另開 <details>
+//    若可見步驟有 ≥2 個能對齊，就回傳；否則回傳 null（讓 buildEq 走回退路徑）
+function tryAlignedRender(steps) {
+    if (!steps || steps.length === 0) return null;
+
+    // 將步驟切成連續同類組（visible / hidden 各一組）
+    const visible = steps.filter(s => !s.hide);
+    const hidden  = steps.filter(s =>  s.hide);
+
+    // 嘗試可見組對齊
+    const visibleAligned = visible.length >= 2 ? buildAlignedBlock(visible) : null;
+    // 嘗試摺疊組對齊
+    const hiddenAligned  = hidden.length  >= 2 ? buildAlignedBlock(hidden)  : null;
+
+    // 兩組都對齊不到 → 整體放棄（讓回退路徑處理）
+    if (!visibleAligned && !hiddenAligned) return null;
+
+    let html = '';
+    if (visibleAligned) {
+        html += `<div class="my-2 text-center overflow-x-auto math-scroll">${visibleAligned}</div>`;
+    } else if (visible.length > 0) {
+        // 可見組對齊失敗但有內容 → 逐行渲染
+        html += visible.map(s => renderSingleStep(s.text, false)).join('');
+    }
+
+    if (hiddenAligned || hidden.length > 0) {
+        const innerHidden = hiddenAligned
+            ? `<div class="my-2 text-center overflow-x-auto math-scroll">${hiddenAligned}</div>`
+            : hidden.map(s => renderSingleStep(s.text, false)).join('');
         html += `
         <details class="group my-2">
             <summary class="cursor-pointer text-indigo-500 hover:text-indigo-700 font-bold text-sm select-none flex items-center gap-1 outline-none ml-1">
                 <svg class="w-5 h-5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                查看摺疊步驟
+                查看詳細步驟
             </summary>
             <div class="mt-2 pl-5 border-l-2 border-indigo-200">
-                ${folded.map(s => {
-                    let t = s.text;
-                    let hasInline = t.includes('\\(') || t.includes('\\[');
-                    let hasBareCJK = /[一-鿿]/.test(t) && !/\\text\s*\{[^}]*[一-鿿]/.test(t);
-                    if (hasInline || hasBareCJK) return `<div class="my-2">${t}</div>`;
-                    return `<div class="my-2">\\( \\displaystyle ${t} \\)</div>`;
-                }).join('')}
+                ${innerHidden}
             </div>
         </details>`;
     }
     return html;
+}
+
+// 單行 step 渲染（智能避免嵌套 KaTeX 分隔符）
+function renderSingleStep(txt, addPrefix) {
+    let hasInline = txt.includes('\\(') || txt.includes('\\[');
+    let hasBareCJK = /[一-鿿]/.test(txt) && !/\\text\s*\{[^}]*[一-鿿]/.test(txt);
+    const prefix = addPrefix ? '= ' : '';
+    if (hasInline || hasBareCJK) return `<div class="my-2">${prefix}${txt}</div>`;
+    return `<div class="my-2">\\( \\displaystyle ${prefix}${txt} \\)</div>`;
 }
 
 function buildEq(rawSteps) {
