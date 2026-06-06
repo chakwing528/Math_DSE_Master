@@ -71,11 +71,11 @@ function generateQuadraticQuestions(num, levelPref) {
                 let w3 = `a \\text{ 或 } a + ${b}`; // 沒把 1 移項
                 
                 steps = [
-                    { text: `絕對不能直接將兩邊的 \\( (x-a) \\) 約掉！這會漏失根。`, hide: false },
+                    { text: `絕對不能直接將兩邊的 \\( (x-a) \\) 約掉！這會漏失根。`, hide: true },
                     { text: `正確做法是將右邊移項至左邊：\\( (x-a)(x - a - ${b}) - (x-a) = 0 \\)`, hide: true },
                     { text: `抽取公因式 \\( (x-a) \\)：\\( (x-a)[(x - a - ${b}) - 1] = 0 \\)`, hide: true },
                     { text: `\\( (x-a)(x - a - ${b + 1}) = 0 \\)`, hide: true },
-                    { text: `因此 \\( x-a = 0 \\) 或 \\( x - a - ${b + 1} = 0 \\) \\( \\implies x = a \\text{ 或 } x = a + ${b + 1} \\)`, hide: false }
+                    { text: `因此 \\( x-a = 0 \\) 或 \\( x - a - ${b + 1} = 0 \\) \\( \\implies x = a \\text{ 或 } x = a + ${b + 1} \\)`, hide: true }
                 ];
                 
                 options = [
