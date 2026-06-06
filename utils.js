@@ -91,10 +91,84 @@ function filterUniqueSteps(steps) {
 }
 
 // 構建數學算式與摺疊步驟的 HTML
+// 🎯 將一組步驟解析為 LaTeX aligned rows
+//    回傳：成功 → aligned LaTeX 字串；失敗（任一步驟不符）→ null
+function buildAlignedBlock(stepGroup) {
+    if (!stepGroup || stepGroup.length < 2) return null;
+    const OP_REGEX = /\\\\leq|\\\\geq|\\\\le|\\\\ge|\\\\neq|\\\\equiv|<=|>=|<|>|=/;
+    const rows = [];
+    for (const s of stepGroup) {
+        const text = String(s.text || s);
+        let colonIdx = text.indexOf('：');
+        if (colonIdx < 0) colonIdx = text.indexOf(':');
+        let label = '', mathPart = text;
+        if (colonIdx >= 0) {
+            label = text.substring(0, colonIdx);
+            mathPart = text.substring(colonIdx + 1);
+        }
+        const mathMatch = mathPart.match(/\\\(\s*([\s\S]+?)\s*\\\)/);
+        if (!mathMatch) return null;
+        const math = mathMatch[1].trim();
+        if (/\\begin\{aligned\}/.test(math)) return null;
+        const opMatch = OP_REGEX.exec(math);
+        if (!opMatch) return null;
+        const op = opMatch[0];
+        const lhs = math.substring(0, opMatch.index).trim();
+        const rhs = math.substring(opMatch.index + op.length).trim();
+        if (!lhs || !rhs) return null;
+        const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
+        const labelTex = cleanLabel ? ` && \\text{${cleanLabel}}` : '';
+        rows.push(`${lhs} &${op} ${rhs}${labelTex}`);
+    }
+    if (rows.length < 2) return null;
+    return `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
+}
+
+// 🎯 一律把全部步驟（不論 hide flag）放進「查看詳細步驟」摺疊區
+//    嘗試對齊：能對齊就用 aligned 區塊；不能就逐行
+function tryAlignedRender(steps) {
+    if (!steps || steps.length === 0) return null;
+
+    // 一律忽略 hide flag — 全部步驟視為「摺疊內容」
+    const allSteps = steps.slice();
+
+    // 嘗試整組對齊
+    const alignedTeX = allSteps.length >= 2 ? buildAlignedBlock(allSteps) : null;
+
+    const innerHtml = alignedTeX
+        ? `<div class="my-2 text-center overflow-x-auto math-scroll">${alignedTeX}</div>`
+        : allSteps.map(s => renderSingleStep(s.text, false)).join('');
+
+    return `
+        <details class="group my-2">
+            <summary class="cursor-pointer text-indigo-500 hover:text-indigo-700 font-bold text-sm select-none flex items-center gap-1 outline-none ml-1">
+                <svg class="w-5 h-5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                查看詳細步驟
+            </summary>
+            <div class="mt-2 pl-5 border-l-2 border-indigo-200">
+                ${innerHtml}
+            </div>
+        </details>`;
+}
+
+// 單行 step 渲染（智能避免嵌套 KaTeX 分隔符）
+function renderSingleStep(txt, addPrefix) {
+    let hasInline = txt.includes('\\(') || txt.includes('\\[');
+    let hasBareCJK = /[一-鿿]/.test(txt) && !/\\text\s*\{[^}]*[一-鿿]/.test(txt);
+    const prefix = addPrefix ? '= ' : '';
+    if (hasInline || hasBareCJK) return `<div class="my-2">${prefix}${txt}</div>`;
+    return `<div class="my-2">\\( \\displaystyle ${prefix}${txt} \\)</div>`;
+}
+
 function buildEq(rawSteps) {
     let steps = filterUniqueSteps(rawSteps);
     if (steps.length === 1) return `\\( \\displaystyle ${steps[0].text} \\)`;
-    
+
+    // ⭐ 優先嘗試對齊渲染（讓 =/不等號跨行垂直對齊）
+    const alignedHtml = tryAlignedRender(steps);
+    if (alignedHtml) return `<div class="w-full">${alignedHtml}</div>`;
+
+    // 回退至原有逐步顯示邏輯
     let html = `<div class="text-left w-full overflow-x-auto math-scroll">`;
     let isFirst = true;
     
@@ -114,13 +188,34 @@ function buildEq(rawSteps) {
                     查看詳細步驟
                 </summary>
                 <div class="mt-2 pl-5 border-l-2 border-indigo-200 flex flex-col w-full overflow-x-auto math-scroll">
-                    ${foldEqs.map(s => `<div class="my-2">\\( \\displaystyle = ${s} \\)</div>`).join('')}
+                    ${foldEqs.map(s => {
+                        // 🛡️ 同步防呆：若摺疊步驟內已含 \\( 或裸中文則不再外包
+                        let hasInline = s.includes('\\(') || s.includes('\\[');
+                        let hasBareCJK = /[一-鿿]/.test(s) && !/\\text\s*\{[^}]*[一-鿿]/.test(s);
+                        if (hasInline || hasBareCJK) return `<div class="my-2">= ${s}</div>`;
+                        return `<div class="my-2">\\( \\displaystyle = ${s} \\)</div>`;
+                    }).join('')}
                 </div>
             </details>
             `;
         } else {
-            let prefix = isFirst ? '' : '= ';
-            html += `<div class="my-2 w-full">\\( \\displaystyle ${prefix}${steps[i].text} \\)</div>`;
+            // 🌟 步驟內已含「=」或「\begin{aligned}」時，不再前置「= 」避免雙重等號
+            let txt = steps[i].text;
+            let hasOwnEq = /(?:\\begin\{aligned\})|(?<!\\)=/.test(txt);
+            let prefix = (isFirst || hasOwnEq) ? '' : '= ';
+
+            // 🛡️ 自動偵測：若 step 文字已含 inline math (\\( \\)) 或裸中文字符，
+            //    則不再外包 \\(\\displaystyle ...\\) 避免「嵌套分隔符」導致 KaTeX 解析失敗。
+            //    交由 KaTeX auto-render 自行掃描內部 \\( \\) 渲染數學。
+            let hasInlineMath = txt.includes('\\(') || txt.includes('\\[');
+            // 裸中文：有中文字但又沒被 \text{...} 包住的情況視為混合內容
+            let hasBareChinese = /[一-鿿]/.test(txt) && !/\\text\s*\{[^}]*[一-鿿]/.test(txt);
+
+            if (hasInlineMath || hasBareChinese) {
+                html += `<div class="my-2 w-full">${prefix}${txt}</div>`;
+            } else {
+                html += `<div class="my-2 w-full">\\( \\displaystyle ${prefix}${txt} \\)</div>`;
+            }
             isFirst = false;
         }
     }
