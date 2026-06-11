@@ -295,7 +295,7 @@ function generateLinearQuestions(num, levelPref) {
                     { text: `\\( L_1 \\) 的 \\( y \\) 軸交點高於 \\( L_2 \\) \\( \\implies b > d > 0 \\)，所以 \\( b > d \\) 正確 (II 正確)。`, hide: true },
                     { text: `現在推導 \\( ad \\) 與 \\( bc \\)：已知 \\( c > a \\) 且 \\( b > d \\)（全為正數）。將 \\( a < c \\) 兩邊同乘正數 \\( d \\) 得 \\( ad < cd \\)；無法直接得出 \\( ad > bc \\) 的通用關係。`, hide: true },
                     { text: `另一個高效判定法：看 \\( x \\text{ 截距} \\)。\\( L_1 \\) 的 \\( x \\text{ 截距} = \\frac{b}{a} \\)，\\( L_2 \\) 的 \\( x \\text{ 截距} = \\frac{d}{c} \\)。由圖可見 \\( L_1 \\) 的 \\( x \\text{ 截距} > L_2 \\) 的 \\( x \\text{ 截距} \\)。`, hide: false },
-                    { text: `故 \\( \\frac{b}{a} > \\frac{d}{c} \\)。因為 \\( a \\) 和 \\( c \\) 都是正數，兩邊同乘以 \\( ac \\) 不需變號，得到 \\( bc > ad \\)，即 \\( ad < bc \\)。因此 III 錯誤。`, font-weight: "bold", hide: false }
+                    { text: `故 \\( \\frac{b}{a} > \\frac{d}{c} \\)。因為 \\( a \\) 和 \\( c \\) 都是正數，兩邊同乘以 \\( ac \\) 不需變號，得到 \\( bc > ad \\)，即 \\( ad < bc \\)。因此 III 錯誤。`, hide: false }
                 ];
 
                 options = [

@@ -31,15 +31,15 @@ function _vtxWrapSvg(content) {
 }
 
 function drawParabola(vx, vy, a, color="#3b82f6") {
-    let path = \`\`;
+    let path = ``;
     let first = true;
     for(let i = -150; i <= 150; i+=10) {
         let px = vx + i;
         let py = vy - a * (i * i);
-        if (first) { path += \`M \${px},\${py} \`; first = false; }
-        else { path += \`L \${px},\${py} \`; }
+        if (first) { path += `M ${px},${py} `; first = false; }
+        else { path += `L ${px},${py} `; }
     }
-    return \`<path d="\${path}" fill="none" stroke="\${color}" stroke-width="2" />\`;
+    return `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" />`;
 }
 
 function _vtxShuffle(array) {
@@ -292,7 +292,7 @@ function generateVertexQuestions(num, levelPref) {
                     { text: `III 正確：這是最難的部分。利用頂點坐標！對稱軸 \\( x = -\\frac{4}{2a} = -\\frac{2}{a} \\)。`, hide: true },
                     { text: `將其代入求頂點的 \\( y \\) 坐標：\\( y = a(-\\frac{2}{a})^2 + 4(-\\frac{2}{a}) + c = \\frac{4}{a} - \\frac{8}{a} + c = c - \\frac{4}{a} \\)。`, hide: true },
                     { text: `由圖可見頂點在 \\( x \\) 軸上方，故 \\( y > 0 \\implies c - \\frac{4}{a} > 0 \\implies c > \\frac{4}{a} \\)。`, hide: true },
-                    { text: `由於我們已知 \\( a < 0 \\)，將不等式兩邊同乘以負數 \\( a \\) 時，不等號必須轉向！得 \\( ac < 4 \\)。`, font-weight: "bold", hide: false }
+                    { text: `由於我們已知 \\( a < 0 \\)，將不等式兩邊同乘以負數 \\( a \\) 時，不等號必須轉向！得 \\( ac < 4 \\)。`, hide: false }
                 ];
 
                 options = [
