@@ -29,17 +29,17 @@ function _facLin(v, k) {
     if (k === 0) return v;
     return k > 0 ? `${v} + ${k}` : `${v} - ${Math.abs(k)}`;
 }
-// 詳細步驟摺疊區（首行原式，其後每行加「= 」）
+// 詳細步驟摺疊區（首行原式，其後每行 = 號於左邊對齊）
 function _facSteps(lines) {
-    const body = lines.map((l, i) =>
-        `<div class="my-1">${i === 0 ? '' : '= '}\\( \\displaystyle ${l} \\)</div>`).join('');
+    const rows = lines.map((l, i) => (i === 0 ? `& ${l}` : `&= ${l}`));
+    const block = `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
     return `
     <details class="group my-2">
         <summary class="cursor-pointer text-indigo-500 hover:text-indigo-700 font-bold text-sm select-none flex items-center gap-1 outline-none ml-1">
             <svg class="w-5 h-5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
             查看詳細步驟
         </summary>
-        <div class="mt-2 pl-5 border-l-2 border-indigo-200">${body}</div>
+        <div class="mt-2 pl-5 border-l-2 border-indigo-200 overflow-x-auto math-scroll">${block}</div>
     </details>`;
 }
 const _facWrap = s => `\\( \\displaystyle ${s} \\)`;
@@ -58,9 +58,19 @@ function generateFactorizationS2Questions(num, levelPref) {
 
     function distinct2() { let p = pick(duoPairs); return Math.random() < 0.5 ? [p[0], p[1]] : [p[1], p[0]]; }
 
+    // 題型按順序輪流出（每個程度各自計數），出完一輪再重複
+    const typeCount = { '1': 5, '2': 5, '3': 6, '4': 6 };
+    const typeCounter = {};
+
     for (let i = 0; i < num; i++) {
         let lvl = String(levelPref).toLowerCase();
         if (lvl === 'mixed') lvl = pick(['1', '2', '3', '4']);
+
+        // 依程度順序輪流選題型
+        const TC = typeCount[lvl] || 5;
+        typeCounter[lvl] = (typeCounter[lvl] || 0);
+        const type = typeCounter[lvl] % TC;
+        typeCounter[lvl]++;
 
         let qObj = { id: i + 1, topic: "S2 因式分解" };
         let q = "", ans = "", wrongs = [], steps = [];
@@ -68,7 +78,6 @@ function generateFactorizationS2Questions(num, levelPref) {
         // ════════════ 程度 1：提取公因式 ════════════
         if (lvl === '1') {
             qObj.level = "⭐ 程度 1";
-            const type = ri(0, 4);
 
             if (type === 0) {
                 // T1 兩項・數字公因式：5p − 20q → 5(p − 4q)
@@ -166,7 +175,6 @@ function generateFactorizationS2Questions(num, levelPref) {
         // ════════════ 程度 2：二項式公因式 + 分組分解 ════════════
         } else if (lvl === '2') {
             qObj.level = "⭐⭐ 程度 2";
-            const type = ri(0, 4);
 
             if (type === 0) {
                 // T1 二項式公因式：x(y+1) + 8(y+1) → (y+1)(x+8)
@@ -271,7 +279,6 @@ function generateFactorizationS2Questions(num, levelPref) {
         // ════════════ 程度 3：平方差 + 完全平方（基礎） ════════════
         } else if (lvl === '3') {
             qObj.level = "⭐⭐⭐ 程度 3";
-            const type = ri(0, 5);
 
             if (type === 0) {
                 // T1 基本平方差：x² − 36 → (x+6)(x−6)
@@ -354,7 +361,6 @@ function generateFactorizationS2Questions(num, levelPref) {
         // ════════════ 程度 4：平方差 + 完全平方（進階變化） ════════════
         } else {
             qObj.level = "⭐⭐⭐⭐ 程度 4";
-            const type = ri(0, 5);
 
             if (type === 0) {
                 // T1 顛倒次序平方差：−169 + y² → (y+13)(y−13)
