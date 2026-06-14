@@ -17,7 +17,7 @@ const motivationalQuotes = [
 
 const fallbackConfigs = {
     'indices': { name: '指數定律', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1', desc: '只有 1 個運算步驟<br>鞏固單一法則。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3', desc: '只有 2 個運算步驟<br>學習法則轉換。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '包含 2 個變數<br>嚴格只有 2 步。' } ] },
-    'factorization': { name: '因式分解', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '提公因式<br>學習抽出共同因子。' }, { id: 'L2A', title: '⭐⭐ 程度 2A', badge: 'S2', desc: '一元二次公式分解<br>單一變數完全平方與平方差。' }, { id: 'L2B', title: '⭐⭐ 程度 2B', badge: 'S2', desc: '二元二次公式分解<br>雙變數完全平方與平方差。' }, { id: 'L3A', title: '⭐⭐⭐ 程度 3A', badge: 'S3、DSE', desc: '一元二次因式分解<br>單變數十字相乘法。' }, { id: 'L3B', title: '⭐⭐⭐ 程度 3B', badge: 'S3、DSE', desc: '二元二次因式分解<br>包含雙變數的十字相乘。' } ] },
+    'factorization_s2': { name: 'S2 因式分解', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '提取公因式<br>抽出共同因子。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '二項式公因式 + 分組分解<br>四項配對提取。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2', desc: '平方差 + 完全平方（基礎）<br>直接套用恆等式。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S2', desc: '平方差 + 完全平方（進階）<br>變化題與先提公因式。' } ] },
     'rounding': { name: '近似值與捨入', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1、DSE', desc: '基本捨入<br>小數點與有效數字的基本四捨五入。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1、DSE', desc: '上捨入與下捨入<br>進階要求：強制進位或捨去。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S1、DSE', desc: '綜合應用<br>包含前導零小數及大整數陷阱。' } ] },
     'identities': { name: '恆等式', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '展開與比較係數<br>基礎一元一次恆等式。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2、DSE', desc: '二次恆等式<br>進階代入與比較係數。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '比例問題<br>求取多個未知數的比例。' } ] },
     'fractions': { name: '通分母', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '分母為一元一次<br>分子為常數。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S4', desc: '分母為一元二次<br>需先因式分解再通分母。' } ] },
@@ -25,7 +25,7 @@ const fallbackConfigs = {
     'expansion': { name: '恆等式的展開', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '展開 (x+a)² 或 (x+a)(x-a)<br>基礎展開。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '展開 (bx+a)² 或 (bx+a)(bx-a)<br>b 為正整數。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '展開 (bx+a)² 或 (bx+a)(bx-a)<br>a 與 b 皆可為負數。' } ] },
     'alg_frac_mul_div': { name: '代數分式的乘除法', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '單項式乘除法<br>指數定律約簡' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '二項式乘除法<br>提公因式與變號' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '進階因式分解<br>平方差與完全平方' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '進階因式分解<br>十字相乘法' } ] },
     'triangle_area': { name: '三角形面積', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '包含 1/2absinC 及 希羅公式<br>考驗公式判別與計算。' } ] },
-    'change_of_subject': { name: '主項轉換', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎主項轉換<br>一步變項移項。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '進階主項轉換<br>含括號與多步移項。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '挑戰級主項轉換<br>分式與多項合併。' } ] },
+    'change_of_subject': { name: '主項轉換', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '入門主項轉換<br>一步移項或除法。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2、DSE', desc: '基礎主項轉換<br>交叉相乘與兩邊主項。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '中階主項轉換<br>分母含主項與分式方程。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '挑戰級主項轉換<br>主項多次出現與二次。' } ] },
     'pricing': { name: '成本 / 售價 / 標價', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2、DSE', desc: '基礎折扣與利潤計算<br>百分比應用。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '標價與售價綜合<br>多步驟百分比運算。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '成本利潤反推<br>進階比例與百分比分析。' } ] },
     'linear_equations': { name: '直線方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎截距與幾何判讀<br>補底基本功。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '單一圖像之係數正負號判別<br>穩固中游。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '雙線圖像與係數比較<br>拉分進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '高階代數不等式與交叉相乘<br>拔尖挑戰。' } ] },
     'quadratic_equations': { name: '二次方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎二次方程求解<br>防漏根陷阱。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '根的性質與判別式 Δ<br>核心概念。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '兩根之和與兩根之積<br>韋達定理。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '高階代數變形與隱藏二次方程<br>拔尖。' } ] },
@@ -46,7 +46,7 @@ let attemptsCount = 0;
 let currentLevelPref = 1; 
 let currentTopic = 'indices'; 
 let currentTopicName = '指數定律';
-let totalQuestionsConfig = 5; // 🔧 暫時預設改為 10 題
+let totalQuestionsConfig = 10; // 🔧 暫時預設改為 10 題
 let dynamicQuotes = [];
 let dynamicTopicConfig = [];
 let globalLeaderboard = []; 
@@ -887,7 +887,7 @@ window.startHomework = function(hwName) {
             let qArr = [];
             try {
                 if (cfg.topic === 'indices') qArr = generateIndicesQuestions(cfg.qCount, String(cfg.levelId));
-                else if (cfg.topic === 'factorization') qArr = generateFactorizationQuestions(cfg.qCount, String(cfg.levelId).toLowerCase());
+                else if (cfg.topic === 'factorization_s2') qArr = generateFactorizationS2Questions(cfg.qCount, String(cfg.levelId).toLowerCase());
                 else if (cfg.topic === 'rounding') qArr = generateRoundingQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'identities') qArr = generateIdentitiesQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'fractions') qArr = generateFractionsQuestions(cfg.qCount, String(cfg.levelId));
@@ -949,7 +949,7 @@ function startGlobalMixed(level) {
         currentTopicName = '跨課題綜合挑戰';
         currentLevelPref = level;
 
-        let topicsList = ['indices', 'factorization', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area', 'change_of_subject', 'pricing', 'linear_equations', 'quadratic_equations', 'simultaneous_equations', 'vertex', 'functions_remainder', 'simple_inequalities', 'compound_inequalities', 'hcf_lcm', 'percentage_change', 'compound_interest'];
+        let topicsList = ['indices', 'factorization_s2', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area', 'change_of_subject', 'pricing', 'linear_equations', 'quadratic_equations', 'simultaneous_equations', 'vertex', 'functions_remainder', 'simple_inequalities', 'compound_inequalities', 'hcf_lcm', 'percentage_change', 'compound_interest'];
         
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         let selectedTopics = [];
@@ -971,13 +971,7 @@ function startGlobalMixed(level) {
             
             try {
                 if (t === 'indices') qArr = generateIndicesQuestions(1, lvl);
-                else if (t === 'factorization') {
-                    let fLvl = lvl;
-                    if (lvl === '2') fLvl = Math.random() > 0.5 ? '2a' : '2b';
-                    else if (lvl === '3' || lvl === '4') fLvl = Math.random() > 0.5 ? '3a' : '3b';
-                    else if (lvl === 'mixed') fLvl = 'mixed';
-                    qArr = generateFactorizationQuestions(1, fLvl);
-                }
+                else if (t === 'factorization_s2') qArr = generateFactorizationS2Questions(1, lvl);
                 else if (t === 'rounding') qArr = generateRoundingQuestions(1, lvl);
                 else if (t === 'identities') qArr = generateIdentitiesQuestions(1, lvl);
                 else if (t === 'fractions') qArr = generateFractionsQuestions(1, lvl);
@@ -1041,7 +1035,7 @@ function startGame(levelPref) {
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         
         if (currentTopic === 'indices') questionBank = generateIndicesQuestions(numQ, currentLevelPref); 
-        else if (currentTopic === 'factorization') questionBank = generateFactorizationQuestions(numQ, currentLevelPref); 
+        else if (currentTopic === 'factorization_s2') questionBank = generateFactorizationS2Questions(numQ, currentLevelPref);
         else if (currentTopic === 'rounding') questionBank = generateRoundingQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'identities') questionBank = generateIdentitiesQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'fractions') questionBank = generateFractionsQuestions(numQ, currentLevelPref);
