@@ -38,7 +38,9 @@ const fallbackConfigs = {
     'hcf_lcm': { name: 'H.C.F. / L.C.M.', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1、DSE', desc: '基礎 H.C.F.<br>補底。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1、DSE', desc: '基礎 L.C.M.<br>建基。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '逆向推導<br>單純變數。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '逆向推導綜合<br>拔尖。' } ] },
     'percentage_change': { name: '百分法', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1', desc: '互換、求 N 的 p%、部分佔整體<br>一步基礎。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1', desc: '百分變化、求新值、剩餘百分數<br>兩步運算。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S1、DSE', desc: '反推原值/整體、連續百分變化<br>DSE 入門。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'DSE', desc: '連鎖、加權、二維表格、聯立<br>高中拔尖。' } ] },
     'compound_interest': { name: '複利息', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S3、DSE', desc: '基礎本利和計算 (Amount)<br>補底。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S3、DSE', desc: '複利息計算 (Interest)<br>核心。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S3、DSE', desc: '逆向求本金<br>進階。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'S3、DSE', desc: '等比年金逆向推導<br>拔尖。' } ] },
-    'measurement_error': { name: '量度的誤差', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '捨入、有效數字、絕對誤差、最大絕對誤差<br>概念入門。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '真確值範圍、相對誤差、百分誤差<br>基礎應用。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '百分誤差、逆向求誤差與範圍<br>DSE 入門。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'DSE', desc: '讀數百分誤差、範圍判斷、極端可能值<br>高中拔尖。' } ] }
+    'measurement_error': { name: '量度的誤差', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S2', desc: '捨入、有效數字、絕對誤差、最大絕對誤差<br>概念入門。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S2', desc: '真確值範圍、相對誤差、百分誤差<br>基礎應用。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S2、DSE', desc: '百分誤差、逆向求誤差與範圍<br>DSE 入門。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'DSE', desc: '讀數百分誤差、範圍判斷、極端可能值<br>高中拔尖。' } ] },
+    'polynomial_operations': { name: '多項式的運算', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1', desc: '單/多項式、次數、係數、合併、指數律<br>概念入門（12 款）。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1', desc: '合併同類項、加減、分配律、代入求值<br>運算深化（12 款）。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S1、TSA', desc: '多變數、二項式相乘、展開排列<br>TSA/DSE 入門（12 款）。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'DSE', desc: '值最大最小、多項式相乘、求係數、逆向<br>高中拔尖（12 款）。' } ] },
+    'linear_one_var': { name: '一元一次方程', levels: [ { id: 'L1', title: '⭐ 程度 1', badge: 'S1', desc: '判斷解、單步解方程<br>概念入門（12 款）。' }, { id: 'L2', title: '⭐⭐ 程度 2', badge: 'S1', desc: '兩步、括號、分式<br>運算深化（12 款）。' }, { id: 'L3', title: '⭐⭐⭐ 程度 3', badge: 'S1、TSA', desc: '雙邊變數、分式、應用、圖形<br>TSA 入門（12 款）。' }, { id: 'L4', title: '⭐⭐⭐⭐ 程度 4', badge: 'DSE', desc: '應用題、列式、圖形、逆向<br>高中拔尖（12 款）。' } ] }
 };
 
 let questionBank = [];
@@ -911,6 +913,8 @@ window.startHomework = function(hwName) {
                 else if (cfg.topic === 'percentage_change') qArr = generatePercentageQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'compound_interest') qArr = generateCompoundInterestQuestions(cfg.qCount, String(cfg.levelId));
                 else if (cfg.topic === 'measurement_error') qArr = generateMeasurementErrorQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'polynomial_operations') qArr = generatePolynomialOpsQuestions(cfg.qCount, String(cfg.levelId));
+                else if (cfg.topic === 'linear_one_var') qArr = generateLinearOneVarQuestions(cfg.qCount, String(cfg.levelId));
             } catch(e) {
                 console.error(`Error generating ${cfg.topic}:`, e);
             }
@@ -953,7 +957,7 @@ function startGlobalMixed(level) {
         currentTopicName = '跨課題綜合挑戰';
         currentLevelPref = level;
 
-        let topicsList = ['indices', 'factorization_s2', 'factorization_s3', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area', 'change_of_subject', 'pricing', 'linear_equations', 'quadratic_equations', 'simultaneous_equations', 'vertex', 'functions_remainder', 'simple_inequalities', 'compound_inequalities', 'hcf_lcm', 'percentage_change', 'compound_interest', 'measurement_error'];
+        let topicsList = ['indices', 'factorization_s2', 'factorization_s3', 'rounding', 'identities', 'fractions', 'binary', 'expansion', 'alg_frac_mul_div', 'triangle_area', 'change_of_subject', 'pricing', 'linear_equations', 'quadratic_equations', 'simultaneous_equations', 'vertex', 'functions_remainder', 'simple_inequalities', 'compound_inequalities', 'hcf_lcm', 'percentage_change', 'compound_interest', 'measurement_error', 'polynomial_operations', 'linear_one_var'];
         
         let numQ = typeof window !== 'undefined' && window.totalQuestionsConfig ? window.totalQuestionsConfig : totalQuestionsConfig;
         let selectedTopics = [];
@@ -997,6 +1001,8 @@ function startGlobalMixed(level) {
                 else if (t === 'percentage_change') qArr = generatePercentageQuestions(1, lvl);
                 else if (t === 'compound_interest') qArr = generateCompoundInterestQuestions(1, lvl);
                 else if (t === 'measurement_error') qArr = generateMeasurementErrorQuestions(1, lvl);
+                else if (t === 'polynomial_operations') qArr = generatePolynomialOpsQuestions(1, lvl);
+                else if (t === 'linear_one_var') qArr = generateLinearOneVarQuestions(1, lvl);
             } catch(e) {
                 console.error(`Error generating ${t}:`, e);
             }
@@ -1063,6 +1069,8 @@ function startGame(levelPref) {
         else if (currentTopic === 'percentage_change') questionBank = generatePercentageQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'compound_interest') questionBank = generateCompoundInterestQuestions(numQ, currentLevelPref);
         else if (currentTopic === 'measurement_error') questionBank = generateMeasurementErrorQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'polynomial_operations') questionBank = generatePolynomialOpsQuestions(numQ, currentLevelPref);
+        else if (currentTopic === 'linear_one_var') questionBank = generateLinearOneVarQuestions(numQ, currentLevelPref);
 
         assignQuestionScores();
         assignHandwriting(questionBank);
