@@ -1,38 +1,32 @@
 // js/topics/simple_inequalities.js
+// 簡單不等式（8.1 簡易不等式｜8.2 解一元一次不等式）
+// 程度1 概念(1步)｜程度2 基礎解(2步)｜程度3 括號/分式/雙邊(2-4步)｜程度4 高中/DSE
 
 // ==========================================
-// 基礎不等式專用錯誤提示訊息 (無 及/或 邏輯)
+// 錯誤提示訊息
 // ==========================================
 const msgSimpleIneqSign = `<div class="text-red-600 font-bold text-lg mb-1">❗ 負數變號錯誤</div><div class="text-sm text-slate-500 mb-2">當不等式兩邊同時乘以或除以一個負數時，不等號的方向必須反轉（例如：\\(>\\) 變成 \\(<\\)）。</div>`;
-const msgIneqFrac = `<div class="text-red-600 font-bold text-lg mb-1">❗ 分數展開或移項錯誤</div><div class="text-sm text-slate-500 mb-2">同乘公倍數消去分母時，請確保每一項都有乘到；若分子有負號，展開時括號內的每一項都要變號（特別注意負負得正）。</div>`;
-const msgIneqProp = `<div class="text-red-600 font-bold text-lg mb-1">❗ 不等式性質理解錯誤</div><div class="text-sm text-slate-500 mb-2">請注意：<br>1. 同乘/除負數要變號。<br>2. 倒數性質：若 \\(a > b > 0\\)，則 \\(\\frac{1}{a} < \\frac{1}{b}\\)。<br>3. 平方性質：若涉及負數，平方後的大小關係可能會改變。</div>`;
-const msgIneqInt = `<div class="text-red-600 font-bold text-lg mb-1">❗ 極值整數選取錯誤</div><div class="text-sm text-slate-500 mb-2">尋找最大或最小整數時，請注意不等號是否包含等號（\\(\\le\\) 或 \\(\\ge\\)）。例如 \\(x < 3\\) 的最大整數是 2，而 \\(x \\le 3\\) 的最大整數是 3。</div>`;
+const msgIneqFrac = `<div class="text-red-600 font-bold text-lg mb-1">❗ 分數展開或移項錯誤</div><div class="text-sm text-slate-500 mb-2">同乘公倍數消去分母時，每一項都要乘到；分子有負號，展開時括號內每一項都要變號。</div>`;
+const msgIneqProp = `<div class="text-red-600 font-bold text-lg mb-1">❗ 不等式性質理解錯誤</div><div class="text-sm text-slate-500 mb-2">同乘/除負數要變號；倒數及平方性質在負數時方向可能改變。</div>`;
+const msgIneqInt = `<div class="text-red-600 font-bold text-lg mb-1">❗ 極值整數選取錯誤</div><div class="text-sm text-slate-500 mb-2">尋找最大/最小整數時，留意不等號是否含等號（\\(\\le / \\ge\\)）。</div>`;
+const msgIneqSymbol = `<div class="text-red-600 font-bold text-lg mb-1">❗ 不等號意義錯誤</div><div class="text-sm text-slate-500 mb-2">大於 \\(>\\)、小於 \\(<\\)、不大於/至多 \\(\\le\\)、不小於/至少 \\(\\ge\\)、超過 \\(>\\)、低於 \\(<\\)。</div>`;
+const msgIneqMove = `<div class="text-red-600 font-bold text-lg mb-1">❗ 移項或計算錯誤</div><div class="text-sm text-slate-500 mb-2">移項時記得變號；同除係數時數值要計算正確。</div>`;
 
 function _siShuffle(array) {
-    let currentIndex = array.length, randomIndex;
-    while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-    }
+    let c = array.length, r;
+    while (c !== 0) { r = Math.floor(Math.random() * c); c--; [array[c], array[r]] = [array[r], array[c]]; }
     return array;
 }
 
+// 步驟 → 不等號左對齊 aligned
 function _siBuildEq(steps) {
-    // 🌟 自動將「標籤：\\( LHS op RHS \\)」每步格式重排為 LaTeX aligned，
-    //    使不等號 (< / > / \le / \ge / =) 跨步驟垂直對齊。
     const INEQ_REGEX = /\\le|\\ge|\\neq|<|>|=/;
-    const rows = [];
-    const fallback = [];
-
+    const rows = [], fallback = [];
     for (const s of steps) {
         const text = String(s.text);
         const colonIdx = text.indexOf('：');
         let label = '', mathPart = text;
-        if (colonIdx >= 0) {
-            label = text.substring(0, colonIdx);
-            mathPart = text.substring(colonIdx + 1);
-        }
+        if (colonIdx >= 0) { label = text.substring(0, colonIdx); mathPart = text.substring(colonIdx + 1); }
         const mathMatch = mathPart.match(/\\\(\s*(.+?)\s*\\\)/);
         if (!mathMatch) { fallback.push(`<div class="my-1">${text}</div>`); continue; }
         const math = mathMatch[1].trim();
@@ -41,14 +35,11 @@ function _siBuildEq(steps) {
         const op = opMatch[0];
         const lhs = math.substring(0, opMatch.index).trim();
         const rhs = math.substring(opMatch.index + op.length).trim();
-        // 去掉 HTML tags（如 <b>），KaTeX 的 \text 不支援 HTML
         const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
         const labelTex = cleanLabel ? ` && \\text{${cleanLabel}}` : '';
         rows.push(`${lhs} &${op} ${rhs}${labelTex}`);
     }
-
     if (rows.length === 0) return fallback.join('');
-
     const aligned = `\\[ \\begin{aligned} ${rows.join(' \\\\ ')} \\end{aligned} \\]`;
     return `<div class="my-2 text-center overflow-x-auto math-scroll">${aligned}</div>` + fallback.join('');
 }
@@ -59,373 +50,485 @@ function _siWrapHint(msg, stepsHtml) {
             ${msg}
             <details class="mt-2 text-sm text-slate-600">
                 <summary class="cursor-pointer text-indigo-600 font-semibold hover:underline">查看詳細解題步驟</summary>
-                <div class="mt-2 pl-3 border-l-2 border-indigo-500 space-y-1 bg-white p-2 rounded">
-                    ${stepsHtml}
-                </div>
+                <div class="mt-2 pl-3 border-l-2 border-indigo-500 space-y-1 bg-white p-2 rounded">${stepsHtml}</div>
             </details>
-        </div>
-    `;
+        </div>`;
+}
+
+// 數線 SVG（dir: 'right'/'left'；closed: 實心=含等號）
+function _siNumLine(val, dir, closed) {
+    const cx = 120, y = 32;
+    const ray = dir === 'right'
+        ? `<line x1="${cx}" y1="${y}" x2="225" y2="${y}" stroke="#16a34a" stroke-width="3"/><polygon points="225,${y - 5} 234,${y} 225,${y + 5}" fill="#16a34a"/>`
+        : `<line x1="${cx}" y1="${y}" x2="35" y2="${y}" stroke="#16a34a" stroke-width="3"/><polygon points="35,${y - 5} 26,${y} 35,${y + 5}" fill="#16a34a"/>`;
+    const dot = closed
+        ? `<circle cx="${cx}" cy="${y}" r="6" fill="#16a34a"/>`
+        : `<circle cx="${cx}" cy="${y}" r="6" fill="white" stroke="#16a34a" stroke-width="2.5"/>`;
+    return `<div class="flex justify-center my-3"><svg width="260" height="58" viewBox="0 0 260 58">
+        <line x1="12" y1="${y}" x2="248" y2="${y}" stroke="#64748b" stroke-width="1.5"/>
+        <polygon points="248,${y - 4} 256,${y} 248,${y + 4}" fill="#64748b"/>
+        <polygon points="12,${y - 4} 4,${y} 12,${y + 4}" fill="#64748b"/>
+        ${ray}${dot}
+        <text x="${cx}" y="${y + 21}" font-size="14" text-anchor="middle" fill="#334155">${val}</text>
+    </svg></div>`;
 }
 
 // ==========================================
-// 題目生成器：基礎不等式 (Simple Inequalities)
+// 題目生成器：簡單不等式
 // ==========================================
 function generateSimpleInequalitiesQuestions(num, levelPref) {
     const bank = [];
-    const vars = ['x', 'y', 'm', 'n'];
+    const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const vars = ['x', 'y', 'm', 'n', 'a', 'p'];
+    const ops = ['>', '<', '\\ge', '\\le'];
+    const flip = op => ({ '>': '<', '<': '>', '\\ge': '\\le', '\\le': '\\ge' })[op] || op;
+    const fr = (n, d) => { if (d < 0) { n = -n; d = -d; } let g = gcd(Math.abs(n), Math.abs(d)) || 1; n /= g; d /= g; return d === 1 ? `${n}` : `\\frac{${n}}{${d}}`; };
+    const W = s => `\\( ${s} \\)`;
+    const lin = (b) => b === 0 ? '' : (b > 0 ? `+ ${b}` : `- ${-b}`);
+    const rnz = (a, b) => { let x = 0; while (x === 0) x = ri(a, b); return x; }; // 非零隨機
+
+    const typeCount = { '1': 5, '2': 5, '3': 5, '4': 5 };
+    const typeCounter = {};
+
+    function finalize(qObj, opts, steps) {
+        // 保留首次出現（正解永遠排第一，不會被同文字干擾項覆蓋）
+        let seen = new Set(), uniq = [];
+        for (const o of opts) { if (!seen.has(o.text)) { seen.add(o.text); uniq.push(o); } }
+        let bump = 1;
+        while (uniq.length < 4) {
+            let base = uniq[0].text, m = base.match(/-?\d+/), t;
+            t = m ? base.replace(/-?\d+/, String(parseInt(m[0]) + bump)) : `\\( x > ${bump} \\)`;
+            if (!seen.has(t)) { seen.add(t); uniq.push({ text: t, isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps || [])) }); }
+            bump++;
+        }
+        qObj.options = _siShuffle(uniq).map((o, idx) => ({ ...o, id: String.fromCharCode(65 + idx) }));
+    }
 
     for (let i = 0; i < num; i++) {
-        let levelType = levelPref;
-        if (levelPref === 'mixed') {
-            const types = ['1', '2', '3', '4'];
-            levelType = types[Math.floor(Math.random() * types.length)];
+        let lvl = String(levelPref);
+        if (levelPref === 'mixed') lvl = pick(['1', '2', '3', '4']);
+        const TC = typeCount[lvl] || 5;
+        typeCounter[lvl] = (typeCounter[lvl] || 0);
+        const type = typeCounter[lvl] % TC;
+        typeCounter[lvl]++;
+
+        let qObj = { id: i + 1, topic: "簡單不等式" };
+        const v = pick(vars);
+        let steps = [], opts = [];
+
+        // ════════════ 程度 1：概念（1 步） ════════════
+        if (lvl === '1') {
+            qObj.level = "⭐ 程度 1";
+
+            if (type === 0) {
+                // T1 譯句 → 不等式
+                let phr = pick([{ w: '大於', o: '>' }, { w: '小於', o: '<' }, { w: '大於或等於', o: '\\ge' }, { w: '小於或等於', o: '\\le' }, { w: '不等於', o: '\\neq' }]);
+                let nbr = ri(-9, 9);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">以不等式表示：${v} ${phr.w} ${nbr}。</div>`;
+                steps = [{ text: `「${phr.w}」對應符號 \\( ${phr.o} \\)，即 \\( ${v} ${phr.o} ${nbr} \\)`, hide: false }];
+                let allOps = ['>', '<', '\\ge', '\\le', '\\neq'].filter(o => o !== phr.o);
+                opts = [{ text: W(`${v} ${phr.o} ${nbr}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) }];
+                _siShuffle(allOps).slice(0, 3).forEach(o => opts.push({ text: W(`${v} ${o} ${nbr}`), isCorrect: false, hint: _siWrapHint(msgIneqSymbol, _siBuildEq(steps)) }));
+
+            } else if (type === 1) {
+                // T2 詞語意義（不大於/至少/超過…）
+                let phr = pick([
+                    { w: '不大於', o: '\\le' }, { w: '不小於', o: '\\ge' }, { w: '至少為', o: '\\ge' },
+                    { w: '至多為', o: '\\le' }, { w: '超過', o: '>' }, { w: '低於', o: '<' }, { w: '高於', o: '>' }
+                ]);
+                let ctx = pick([['一本書的頁數', 'n'], ['一座山的高度（m）', 'h'], ['一支筆的售價（$）', 'p'], ['一名男子的身高（cm）', 'h'], ['一輛汽車的速率（km/h）', 's']]);
+                let nbr = ri(2, 50) * 10;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">以不等式表示：${ctx[0]}（\\( ${ctx[1]} \\)）${phr.w} ${nbr}。</div>`;
+                steps = [{ text: `「${phr.w}」對應符號 \\( ${phr.o} \\)，即 \\( ${ctx[1]} ${phr.o} ${nbr} \\)`, hide: false }];
+                let allOps = ['>', '<', '\\ge', '\\le'].filter(o => o !== phr.o);
+                opts = [{ text: W(`${ctx[1]} ${phr.o} ${nbr}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) }];
+                _siShuffle(allOps).slice(0, 3).forEach(o => opts.push({ text: W(`${ctx[1]} ${o} ${nbr}`), isCorrect: false, hint: _siWrapHint(msgIneqSymbol, _siBuildEq(steps)) }));
+
+            } else if (type === 2) {
+                // T3 比較大小（揀正確一項）
+                let trueP = pick([
+                    '\\frac{37}{4} < 10', '-\\frac{13}{5} < -2', '\\frac{7}{4} = 1.75', '8.3 < \\frac{25}{3}',
+                    '-\\frac{5}{2} = -2.5', '\\frac{3}{4} > 0.7', '-3 < -\\frac{5}{2}', '\\frac{9}{4} > 2', '-0.3 > -\\frac{1}{2}'
+                ]);
+                let falseP = _siShuffle([
+                    '\\frac{37}{4} > 10', '-3 > -2', '0.5 > \\frac{2}{3}', '\\frac{9}{2} < 4', '-\\frac{5}{2} > -2',
+                    '\\frac{3}{4} < 0.5', '2.5 < \\frac{7}{3}', '-\\frac{13}{5} > -2', '1.75 > \\frac{7}{4}', '\\frac{1}{3} > 0.5'
+                ]).slice(0, 3);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">下列哪一項<b>正確</b>？</div>`;
+                steps = [{ text: `把分數化成小數再比較，可知 \\( ${trueP} \\) 正確。`, hide: false }];
+                opts = [{ text: W(trueP), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) }];
+                falseP.forEach(p => opts.push({ text: W(p), isCorrect: false, hint: _siWrapHint(msgIneqSymbol, _siBuildEq(steps)) }));
+
+            } else if (type === 3) {
+                // T4 驗證解：x = k 是下列哪個不等式的解？
+                let k = ri(2, 6);
+                let cands = [], guard = 0;
+                while (cands.length < 12 && guard < 200) {
+                    guard++;
+                    let a = pick([1, 1, 2, 3, -1, -2]);
+                    let op = pick(ops);
+                    let c = ri(-6, 12);
+                    let lhsVal = a * k;
+                    let truth = op === '>' ? lhsVal > c : op === '<' ? lhsVal < c : op === '\\ge' ? lhsVal >= c : lhsVal <= c;
+                    let tex = `${a === 1 ? '' : a === -1 ? '-' : a}${v} ${op} ${c}`;
+                    if (!cands.some(x => x.tex === tex)) cands.push({ tex, truth });
+                }
+                let trues = cands.filter(x => x.truth), falses = cands.filter(x => !x.truth);
+                let correct = pick(trues);
+                let three = _siShuffle(falses).slice(0, 3);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">\\( ${v} = ${k} \\) 是下列哪一個不等式的解？</div>`;
+                steps = [{ text: `把 \\( ${v} = ${k} \\) 代入各式，只有 \\( ${correct.tex} \\) 成立。`, hide: false }];
+                opts = [{ text: W(correct.tex), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) }];
+                three.forEach(c => opts.push({ text: W(c.tex), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }));
+
+            } else {
+                // T5 由數線寫不等式
+                let val = ri(-9, 9);
+                let dir = pick(['right', 'left']);
+                let closed = Math.random() > 0.5;
+                let op = dir === 'right' ? (closed ? '\\ge' : '>') : (closed ? '\\le' : '<');
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">下圖為某不等式的解。寫出對應的不等式（以 \\( ${v} \\) 為未知數）。</div>${_siNumLine(val, dir, closed)}`;
+                steps = [
+                    { text: `空心圈表示不含端點（\\(>\\) 或 \\(<\\)），實心圈表示含端點（\\(\\ge\\) 或 \\(\\le\\)）。`, hide: false },
+                    { text: `箭咀向${dir === 'right' ? '右' : '左'}，故 \\( ${v} ${op} ${val} \\)`, hide: false }
+                ];
+                let wrongs = [
+                    `${v} ${flip(op)} ${val}`,
+                    `${v} ${dir === 'right' ? (closed ? '>' : '\\ge') : (closed ? '<' : '\\le')} ${val}`,
+                    `${v} ${op} ${val + pick([-2, 2, 3])}`
+                ];
+                opts = [{ text: W(`${v} ${op} ${val}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) }];
+                wrongs.forEach(w => opts.push({ text: W(w), isCorrect: false, hint: _siWrapHint(msgIneqSymbol, _siBuildEq(steps)) }));
+            }
+
+        // ════════════ 程度 2：基礎解（2 步） ════════════
+        } else if (lvl === '2') {
+            qObj.level = "⭐⭐ 程度 2";
+            let op = pick(ops);
+
+            if (type === 0) {
+                // T1 一步移項：x + b op c
+                let b = ri(-12, 12) || 3, c = ri(-12, 12), ansV = c - b;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${v} ${lin(b)} ${op} ${c} \\)</div>`;
+                steps = [
+                    { text: `原式：\\( ${v} ${lin(b)} ${op} ${c} \\)`, hide: false },
+                    { text: `移項：\\( ${v} ${op} ${c} ${lin(-b)} \\)`, hide: false },
+                    { text: `求解：\\( ${v} ${op} ${ansV} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${op} ${ansV}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(op)} ${ansV}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${c + b}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
+
+            } else if (type === 1) {
+                // T2 ×÷正數
+                if (Math.random() < 0.5) {
+                    let a = ri(2, 6), root = ri(-6, 6), c = a * root;
+                    qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${a}${v} ${op} ${c} \\)</div>`;
+                    steps = [
+                        { text: `原式：\\( ${a}${v} ${op} ${c} \\)`, hide: false },
+                        { text: `兩邊同除以 ${a}：\\( ${v} ${op} ${root} \\)`, hide: false }
+                    ];
+                    opts = [
+                        { text: W(`${v} ${op} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                        { text: W(`${v} ${flip(op)} ${root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                        { text: W(`${v} ${op} ${c * a}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                    ];
+                } else {
+                    let a = ri(2, 6), c = ri(-6, 6), ansV = a * c;
+                    qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( \\frac{${v}}{${a}} ${op} ${c} \\)</div>`;
+                    steps = [
+                        { text: `原式：\\( \\frac{${v}}{${a}} ${op} ${c} \\)`, hide: false },
+                        { text: `兩邊同乘以 ${a}：\\( ${v} ${op} ${ansV} \\)`, hide: false }
+                    ];
+                    opts = [
+                        { text: W(`${v} ${op} ${ansV}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                        { text: W(`${v} ${flip(op)} ${ansV}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                        { text: W(`${v} ${op} ${c}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                    ];
+                }
+
+            } else if (type === 2) {
+                // T3 兩步（係數正）
+                let a = ri(2, 5), b = ri(-8, 8), root = ri(-5, 6), c = a * root + b;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${a}${v} ${lin(b)} ${op} ${c} \\)</div>`;
+                steps = [
+                    { text: `原式：\\( ${a}${v} ${lin(b)} ${op} ${c} \\)`, hide: false },
+                    { text: `移項：\\( ${a}${v} ${op} ${c - b} \\)`, hide: false },
+                    { text: `同除以 ${a}：\\( ${v} ${op} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${op} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(op)} ${root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${fr(c + b, a)}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
+
+            } else if (type === 3) {
+                // T4 ×÷負數變號
+                let a = ri(2, 6), root = ri(-6, 6), c = -a * root;
+                let newOp = flip(op);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( -${a}${v} ${op} ${c} \\)</div>`;
+                steps = [
+                    { text: `原式：\\( -${a}${v} ${op} ${c} \\)`, hide: false },
+                    { text: `兩邊同除以負數 -${a}，<b>不等號轉向</b>：\\( ${v} ${newOp} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${newOp} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${root}`), isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: W(`${v} ${newOp} ${-root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
+
+            } else {
+                // T5 兩步含負係數變號
+                let a = ri(2, 6), b = ri(-8, 8), root = ri(-5, 6), c = -a * root + b;
+                let newOp = flip(op);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${b} - ${a}${v} ${op} ${c} \\)</div>`;
+                steps = [
+                    { text: `原式：\\( ${b} - ${a}${v} ${op} ${c} \\)`, hide: false },
+                    { text: `移項：\\( -${a}${v} ${op} ${c - b} \\)`, hide: false },
+                    { text: `同除以負數 -${a}，<b>不等號轉向</b>：\\( ${v} ${newOp} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${newOp} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${root}`), isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: W(`${v} ${newOp} ${fr(c + b, -a)}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
+            }
+
+        // ════════════ 程度 3：括號 / 分式 / 雙邊（2-4 步） ════════════
+        } else if (lvl === '3') {
+            qObj.level = "⭐⭐⭐ 程度 3";
+            let op = pick(ops);
+
+            if (type === 0) {
+                // T1 括號展開
+                let a = ri(2, 5), b = ri(-5, 5) || 2, root = ri(-5, 6), c = a * (root + b);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${a}(${v} ${lin(b)}) ${op} ${c} \\)</div>`;
+                steps = [
+                    { text: `展開：\\( ${a}${v} ${lin(a * b)} ${op} ${c} \\)`, hide: false },
+                    { text: `移項：\\( ${a}${v} ${op} ${c - a * b} \\)`, hide: false },
+                    { text: `同除以 ${a}：\\( ${v} ${op} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${op} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(op)} ${root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${fr(c - b, a)}`), isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
+                ];
+
+            } else if (type === 1) {
+                // T2 分式
+                let a = ri(2, 5), b = ri(-6, 6), root = ri(-5, 6), c = root / a + b;
+                // 確保 c 為整數
+                let root2 = ri(-5, 6) * a; let cc = root2 / a + b; let rootAns = root2;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( \\frac{${v}}{${a}} ${lin(b)} ${op} ${cc} \\)</div>`;
+                steps = [
+                    { text: `移項：\\( \\frac{${v}}{${a}} ${op} ${cc - b} \\)`, hide: false },
+                    { text: `同乘以 ${a}：\\( ${v} ${op} ${rootAns} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${op} ${rootAns}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(op)} ${rootAns}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${(cc - b)}`), isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
+                ];
+
+            } else if (type === 2) {
+                // T3 雙邊變數
+                let a = ri(3, 6), c = ri(1, a - 2), b = ri(-6, 6), root = ri(-5, 6);
+                // a x + b op c x + d，令 (a-c)x op d-b，x op root
+                let d = (a - c) * root + b;
+                let cf = (k) => k === 1 ? v : k === -1 ? `-${v}` : `${k}${v}`;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${a}${v} ${lin(b)} ${op} ${cf(c)} ${lin(d)} \\)</div>`;
+                steps = [
+                    { text: `把含 ${v} 的項移到左方：\\( ${cf(a - c)} ${op} ${d - b} \\)`, hide: false },
+                    { text: `同除以 ${a - c}：\\( ${v} ${op} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${op} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(op)} ${root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${root + pick([-2, 2])}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
+
+            } else if (type === 3) {
+                // T4 含負分式變號：(b - a x)/k op c
+                let k = ri(2, 4), a = ri(2, 5), b = ri(-6, 6), root = ri(-5, 5), c = (b - a * root) / k;
+                // 確保 c 整數
+                let rootN = ri(-5, 5); let cN = (b - a * rootN); if (cN % k !== 0) { /* 調整 b */ }
+                // 重新建構保證整除
+                let cc = ri(-5, 5); let bb = cc * k + a * root; // (bb - a root)/k = cc
+                let newOp = flip(op);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解下列不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( \\frac{${bb} - ${a}${v}}{${k}} ${op} ${cc} \\)</div>`;
+                steps = [
+                    { text: `同乘以 ${k}：\\( ${bb} - ${a}${v} ${op} ${cc * k} \\)`, hide: false },
+                    { text: `移項：\\( -${a}${v} ${op} ${cc * k - bb} \\)`, hide: false },
+                    { text: `同除以負數 -${a}，<b>轉向</b>：\\( ${v} ${newOp} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${newOp} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${op} ${root}`), isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: W(`${v} ${newOp} ${fr(cc * k - bb, a)}`), isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
+                ];
+
+            } else {
+                // T5 求最大/最小整數解（簡單型）
+                let a = ri(2, 4), root = ri(2, 8), b = ri(-6, 6), c = a * root + b;
+                let askMax = (op === '<' || op === '\\le');
+                let ansInt = op === '<' ? root - 1 : op === '\\le' ? root : op === '>' ? root + 1 : root;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">求滿足不等式 \\( ${a}${v} ${lin(b)} ${op} ${c} \\) 的<b>${askMax ? '最大' : '最小'}整數</b>。</div>`;
+                steps = [
+                    { text: `移項：\\( ${a}${v} ${op} ${c - b} \\)`, hide: false },
+                    { text: `同除以 ${a}：\\( ${v} ${op} ${root} \\)`, hide: false },
+                    { text: `${askMax ? '最大' : '最小'}整數為 ${ansInt}。`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${ansInt}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${root}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${ansInt + (askMax ? 1 : -1)}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${ansInt + (askMax ? -1 : 1)}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
+                ];
+            }
+
+        // ════════════ 程度 4：高中 / DSE ════════════
         } else {
-            levelType = String(levelPref);
-        }
+            qObj.level = "⭐⭐⭐⭐ 程度 4";
 
-        let qObj = { id: i + 1, topic: "不等式 (Inequalities)" };
-        const v = vars[Math.floor(Math.random() * vars.length)];
-        let steps = [];
-        let options = [];
-        let subType = Math.floor(Math.random() * 3);
+            if (type === 0) {
+                // T1 幾何應用：周界建立不等式求範圍
+                let shape = pick([{ n: 3, name: '等邊三角形' }, { n: 4, name: '正方形' }]);
+                let cond = pick([{ w: '至少為', o: '\\ge' }, { w: '不超過', o: '\\le' }, { w: '超過', o: '>' }, { w: '少於', o: '<' }]);
+                let root = ri(2, 9), k = shape.n * root;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">一個${shape.name}的周界${cond.w} \\( ${k} \\) cm。設每邊長度為 \\( ${v} \\) cm，求 \\( ${v} \\) 的取值範圍。</div>`;
+                steps = [
+                    { text: `周界 \\( = ${shape.n}${v} \\)`, hide: false },
+                    { text: `建立不等式：\\( ${shape.n}${v} ${cond.o} ${k} \\)`, hide: false },
+                    { text: `同除以 ${shape.n}：\\( ${v} ${cond.o} ${root} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} ${cond.o} ${root}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} ${flip(cond.o)} ${root}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${cond.o} ${k}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) },
+                    { text: W(`${v} ${cond.o} ${shape.n * k}`), isCorrect: false, hint: _siWrapHint(msgIneqMove, _siBuildEq(steps)) }
+                ];
 
-        if (levelType === '1') {
-            qObj.level = "⭐ 程度 1：基礎一元一次不等式 (單邊移項與變號)";
-            
-            if (subType === 0) {
-                // Type 0: ax + b > c (正係數)
-                let a = Math.floor(Math.random() * 4) + 2; 
-                let ans = Math.floor(Math.random() * 6) + 2; 
-                let b = Math.floor(Math.random() * 10) + 1; 
-                let c = a * ans + b; 
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${a}${v} + ${b} > ${c} \\)。</div>`;
-                steps = [
-                    { text: `移項：\\( ${a}${v} > ${c} - ${b} \\)`, hide: false },
-                    { text: `化簡：\\( ${a}${v} > ${c - b} \\)`, hide: true },
-                    { text: `兩邊同除以正數 ${a} (不變號)：\\( ${v} > ${ans} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} > ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
-                ];
-            } else if (subType === 1) {
-                // Type 1: b - ax >= c (負係數，需變號)
-                let a = Math.floor(Math.random() * 4) + 2; 
-                let ans = Math.floor(Math.random() * 6) + 2; 
-                let b = Math.floor(Math.random() * 10) + 10; 
-                let c = b - a * ans; // -a * ans = c - b
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${b} - ${a}${v} \\ge ${c} \\)。</div>`;
-                steps = [
-                    { text: `移項：\\( -${a}${v} \\ge ${c} - ${b} \\)`, hide: false },
-                    { text: `化簡：\\( -${a}${v} \\ge ${c - b} \\)`, hide: true },
-                    { text: `兩邊同除以負數 -${a} <b>(注意：必須反轉不等號)</b>：\\( ${v} \\le ${ans} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
-                ];
-            } else {
-                // Type 2: 基礎分數 (v/a - b < c)
-                let a = Math.floor(Math.random() * 3) + 2; 
-                let ans = Math.floor(Math.random() * 4) + 2; 
-                let c = Math.floor(Math.random() * 5) + 1; 
-                let b = Math.floor(Math.random() * 5) + 1; 
-                let ans_val = a * (c + b);
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( \\frac{${v}}{${a}} - ${b} < ${c} \\)。</div>`;
-                steps = [
-                    { text: `移項：\\( \\frac{${v}}{${a}} < ${c} + ${b} \\)`, hide: false },
-                    { text: `化簡：\\( \\frac{${v}}{${a}} < ${c + b} \\)`, hide: true },
-                    { text: `兩邊同乘以正數 ${a}：\\( ${v} < ${ans_val} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} < ${ans_val} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} > ${ans_val} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${c + b - a} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
-                    { text: `\\( ${v} > ${c + b - a} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
-                ];
-            }
+            } else if (type === 1) {
+                // T2 不等式性質推導判斷
+                let variant = ri(0, 2);
+                if (variant === 0) {
+                    qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( a > b \\) 且 \\( k < 0 \\)，下列何者<b>必為正確</b>？<br>I. \\( \\frac{a}{k} < \\frac{b}{k} \\)<br>II. \\( a - k > b - k \\)<br>III. \\( ak^2 > bk^2 \\)</div>`;
+                    steps = [
+                        { text: `I：同除負數 \\( k \\) 要變號，\\( \\frac{a}{k} < \\frac{b}{k} \\) 正確。`, hide: false },
+                        { text: `II：兩邊同減 \\( k \\) 不變號，\\( a - k > b - k \\) 正確。`, hide: false },
+                        { text: `III：\\( k^2 > 0 \\)，同乘正數不變號，\\( ak^2 > bk^2 \\) 正確。`, hide: false }
+                    ];
+                    opts = [
+                        { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                        { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
+                    ];
+                } else if (variant === 1) {
+                    qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( a < b < 0 \\)，下列何者<b>必為正確</b>？<br>I. \\( a^2 > b^2 \\)<br>II. \\( \\frac{1}{a} > \\frac{1}{b} \\)<br>III. \\( a + b > 0 \\)</div>`;
+                    steps = [
+                        { text: `I：負數中絕對值較大者平方較大，\\( a^2 > b^2 \\) 正確。`, hide: false },
+                        { text: `II：同號且 \\( a < b \\)，倒數方向反轉，\\( \\frac{1}{a} > \\frac{1}{b} \\) 正確。`, hide: false },
+                        { text: `III：兩負數之和必為負，\\( a + b < 0 \\)，III 錯誤。`, hide: false }
+                    ];
+                    opts = [
+                        { text: `只有 I 及 II`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                        { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `I、II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
+                    ];
+                } else {
+                    qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( x > y > 0 \\)，下列何者<b>必為正確</b>？<br>I. \\( -x < -y \\)<br>II. \\( x^2 > y^2 \\)<br>III. \\( \\frac{1}{x} < \\frac{1}{y} \\)</div>`;
+                    steps = [
+                        { text: `I：同乘 -1 變號，\\( -x < -y \\) 正確。`, hide: false },
+                        { text: `II：正數中較大者平方較大，\\( x^2 > y^2 \\) 正確。`, hide: false },
+                        { text: `III：同號正數倒數方向反轉，\\( \\frac{1}{x} < \\frac{1}{y} \\) 正確。`, hide: false }
+                    ];
+                    opts = [
+                        { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                        { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
+                        { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
+                    ];
+                }
 
-        } else if (levelType === '2') {
-            qObj.level = "⭐⭐ 程度 2：雙邊變數與括號展開";
-            
-            if (subType === 0) {
-                // Type 0: ax - b < cx - d (需變號情況)
-                let a = Math.floor(Math.random() * 3) + 2;
-                let c = a + Math.floor(Math.random() * 3) + 1; // c > a
-                let ans = Math.floor(Math.random() * 5) + 2;
-                let d = Math.floor(Math.random() * 10) + 1;
-                let b = d + (a - c) * ans;
-
-                // 🌟 b 可能為負，需動態決定 +/- 符號避免 "- -14"
-                let bSign = b >= 0 ? `- ${b}` : `+ ${-b}`;
-                let bdDiff = b - d;
-                let bdSign = bdDiff >= 0 ? `${bdDiff}` : `${bdDiff}`; // 直接顯示，會自動帶 -
-
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${a}${v} ${bSign} < ${c}${v} - ${d} \\)。</div>`;
-                steps = [
-                    { text: `將變數移至左邊，常數移至右邊：\\( ${a}${v} - ${c}${v} < ${b >= 0 ? `${b} - ${d}` : `-${-b} - ${d}`} \\)`, hide: false },
-                    { text: `化簡：\\( ${a-c}${v} < ${bdSign} \\)`, hide: true },
-                    { text: `兩邊同除以負數 ${a-c} <b>(注意變號)</b>：\\( ${v} > ${ans} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} > ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} > ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${ans + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
-                ];
-            } else if (subType === 1) {
-                // Type 1: 帶括號展開 a(x - b) >= cx - d
-                let a = Math.floor(Math.random() * 3) + 3; 
-                let c = a - Math.floor(Math.random() * 2) - 1; // a > c
-                let ans = Math.floor(Math.random() * 5) + 2; 
-                let b = Math.floor(Math.random() * 4) + 2;
-                let d = a * b - (a - c) * ans;
-                
-                let dStr = d >= 0 ? `- ${d}` : `+ ${-d}`;
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( ${a}(${v} - ${b}) \\ge ${c}${v} ${dStr} \\)。</div>`;
-                steps = [
-                    { text: `展開括號：\\( ${a}${v} - ${a*b} \\ge ${c}${v} ${dStr} \\)`, hide: false },
-                    { text: `移項：\\( ${a}${v} - ${c}${v} \\ge ${a*b} ${dStr} \\)`, hide: true },
-                    { text: `化簡：\\( ${a-c}${v} \\ge ${a*b - d} \\)`, hide: true },
-                    { text: `除以正數 ${a-c}：\\( ${v} \\ge ${ans} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} \\ge ${ans} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\le ${ans + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) }
-                ];
-            } else {
-                // Type 2: 單邊帶分數的雙邊變數 (ax - b)/c > x - d
-                let c = Math.floor(Math.random() * 2) + 2; // 2 or 3
-                let a = c + Math.floor(Math.random() * 2) + 1; // a > c
-                let ans = Math.floor(Math.random() * 4) + 1;
-                let b = Math.floor(Math.random() * 5) + 2;
-                let d_val = (b - (a - c) * ans) / c;
-                let d = Math.floor(d_val); 
-                ans = (b - c * d) / (a - c);
-                let ansStr = ans % 1 === 0 ? ans : `\\frac{${b - c * d}}{${a - c}}`;
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式 \\( \\frac{${a}${v} - ${b}}{${c}} > ${v} - ${d} \\)。</div>`;
-                steps = [
-                    { text: `兩邊同乘 ${c} 消去分母：\\( ${a}${v} - ${b} > ${c}(${v} - ${d}) \\)`, hide: false },
-                    { text: `展開：\\( ${a}${v} - ${b} > ${c}${v} - ${c*d} \\)`, hide: true },
-                    { text: `移項與化簡：\\( ${a-c}${v} > ${b - c*d} \\)`, hide: true },
-                    { text: `求得：\\( ${v} > ${ansStr} \\)`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${v} > ${ansStr} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} < ${ansStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} > \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：右邊常數項忘記乘分母。</div>", _siBuildEq(steps)) },
-                    { text: `\\( ${v} < \\frac{${b - d}}{${a - 1}} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
-                ];
-            }
-
-        } else if (levelType === '3') {
-            qObj.level = "⭐⭐⭐ 程度 3：不等式性質推導與判斷";
-            
-            if (subType === 0) {
-                // Type 0: a > b, k < 0 (仿 DSE 常見 T/F)
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( a > b \\) 且 \\( k < 0 \\)，判斷下列何者<b>必為正確</b>？<br>I. \\( \\frac{a}{k} < \\frac{b}{k} \\)<br>II. \\( a - k > b - k \\)<br>III. \\( ak^2 > bk^2 \\)</div>`;
-                steps = [
-                    { text: `I. 因為 \\( k < 0 \\)，兩邊同除以負數必須變號，故 \\( \\frac{a}{k} < \\frac{b}{k} \\) 正確。`, hide: false },
-                    { text: `II. 不等式兩邊同時減去同一個數，不等號方向不變，故 \\( a - k > b - k \\) 正確。`, hide: false },
-                    { text: `III. 因為 \\( k < 0 \\)，所以平方後 \\( k^2 > 0 \\)。同乘正數不變號，故 \\( ak^2 > bk^2 \\) 正確。`, hide: false }
-                ];
-                options = [
-                    { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
-                ];
-            } else if (subType === 1) {
-                // Type 1: 負數範圍 a < b < 0
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( a < b < 0 \\)，判斷下列何者<b>必為正確</b>？<br>I. \\( a^2 > b^2 \\)<br>II. \\( \\frac{1}{a} > \\frac{1}{b} \\)<br>III. \\( a + b > 0 \\)</div>`;
-                steps = [
-                    { text: `I. 兩者皆為負數且 \\( a \\) 較小（絕對值較大，如 -3 < -2），平方後 \\( (-3)^2 > (-2)^2 \\implies 9 > 4 \\)，故 \\( a^2 > b^2 \\) 正確。`, hide: false },
-                    { text: `II. 倒數性質：若兩數同號且 \\( a < b \\)，則倒數後方向反轉 \\( \\frac{1}{a} > \\frac{1}{b} \\) 正確。（如 -1/3 > -1/2）`, hide: false },
-                    { text: `III. 兩個負數相加必定小於零，故 \\( a + b < 0 \\)，III 錯誤。`, hide: false }
-                ];
-                options = [
-                    { text: `只有 I 及 II`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `I、II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
-                ];
-            } else {
-                // Type 2: 正數範圍 x > y > 0
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">已知 \\( x > y > 0 \\)，判斷下列何者<b>必為正確</b>？<br>I. \\( -x < -y \\)<br>II. \\( x^2 > y^2 \\)<br>III. \\( \\frac{1}{x} < \\frac{1}{y} \\)</div>`;
-                steps = [
-                    { text: `I. 同乘 -1 必須變號，故 \\( -x < -y \\) 正確。`, hide: false },
-                    { text: `II. 兩者皆正且 \\( x > y \\)，平方後仍維持 \\( x^2 > y^2 \\) 正確。`, hide: false },
-                    { text: `III. 同號正數倒數後方向反轉，故 \\( \\frac{1}{x} < \\frac{1}{y} \\) 正確。`, hide: false }
-                ];
-                options = [
-                    { text: `I、II 及 III`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `只有 I 及 II`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `只有 II 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) },
-                    { text: `只有 I 及 III`, isCorrect: false, hint: _siWrapHint(msgIneqProp, _siBuildEq(steps)) }
-                ];
-            }
-
-        } else {
-            qObj.level = "⭐⭐⭐⭐ 程度 4：求極端整數解與三個分式不等式 (拔尖)";
-            
-            if (subType === 0) {
-                // Type 0: 求最大整數解 (ax - b < cx - d)
-                let c = Math.floor(Math.random() * 3) + 3; 
-                let a = c + Math.floor(Math.random() * 2) + 1; 
-                let exact = Math.floor(Math.random() * 5) + 2.5; 
-                let diff_x = a - c;
-                let b = Math.floor(Math.random() * 10) + 5;
-                let b_minus_d = Math.floor(exact * diff_x);
-                let d = b - b_minus_d;
-                
-                let limit = b_minus_d / diff_x;
-                let maxInt = Math.floor(limit);
-                if (limit === maxInt) maxInt -= 1; 
-                
+            } else if (type === 2) {
+                // T3 求極端整數解（雙邊）
+                let c = ri(2, 4), a = c + pick([1, 2]), b = ri(6, 15), d = ri(1, 5);
+                let L = (b - d) / (a - c), guard = 0;
+                while ((L <= 1.5 || L >= 9) && guard < 50) { b = ri(6, 15); d = ri(1, 5); L = (b - d) / (a - c); guard++; }
+                let maxInt = Number.isInteger(L) ? L - 1 : Math.floor(L);
                 qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">求滿足不等式 \\( ${a}${v} - ${b} < ${c}${v} - ${d} \\) 的<b>最大整數</b>。</div>`;
                 steps = [
-                    { text: `移項：\\( ${a-c}${v} < ${b-d} \\)`, hide: false },
-                    { text: `除以 ${a-c}：\\( ${v} < ${limit} \\)`, hide: true },
-                    { text: `小於 ${limit} 的最大整數為 ${maxInt}。`, hide: false }
+                    { text: `移項：\\( ${a - c}${v} < ${b - d} \\)`, hide: false },
+                    { text: `同除以 ${a - c}：\\( ${v} < ${fr(b - d, a - c)} \\)`, hide: false },
+                    { text: `最大整數為 ${maxInt}。`, hide: false }
                 ];
-                options = [
-                    { text: `\\( ${maxInt} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${Math.ceil(limit)} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
-                    { text: `\\( ${maxInt - 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
-                    { text: `\\( ${maxInt + 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
+                opts = [
+                    { text: W(`${maxInt}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${maxInt + 1}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${maxInt - 1}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${maxInt + 2}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
                 ];
-            } else if (subType === 1) {
-                // Type 1: 求最小整數解 (分式)
-                let a = Math.floor(Math.random() * 2) + 2; 
-                let b = Math.floor(Math.random() * 3) + 2; 
-                let exact = Math.floor(Math.random() * 4) + 1.2; 
-                let limit = exact * a;
-                let c = exact - b; 
-                let cStr = c % 1 === 0 ? c : c.toFixed(1);
-                
-                let minInt = Math.ceil(limit);
-                
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">求滿足不等式 \\( \\frac{${v}}{${a}} - ${b} \\ge ${cStr} \\) 的<b>最小整數</b>。</div>`;
-                steps = [
-                    { text: `移項：\\( \\frac{${v}}{${a}} \\ge ${cStr} + ${b} \\)`, hide: false },
-                    { text: `化簡：\\( \\frac{${v}}{${a}} \\ge ${(c + b).toFixed(1)} \\)`, hide: true },
-                    { text: `乘 ${a}：\\( ${v} \\ge ${limit} \\)`, hide: true },
-                    { text: `大於或等於 ${limit} 的最小整數為 ${minInt}。`, hide: false }
-                ];
-                options = [
-                    { text: `\\( ${minInt} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${Math.floor(limit)} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
-                    { text: `\\( ${minInt + 1} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
-                    { text: `\\( ${minInt - 2} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
-                ];
-            } else {
-                // Type 2: 三個分式組成的不等式 (中二拔尖：公倍數與負號分配)
-                let denomSets = [
-                    { d1: 2, d2: 3, d3: 4, L: 12 },
-                    { d1: 3, d2: 4, d3: 6, L: 12 },
-                    { d1: 2, d2: 5, d3: 10, L: 10 }
-                ];
-                let dSet = denomSets[Math.floor(Math.random() * denomSets.length)];
-                let m1 = dSet.L / dSet.d1;
-                let m2 = dSet.L / dSet.d2;
-                let m3 = dSet.L / dSet.d3;
 
-                let A = Math.floor(Math.random() * 2) + 1; 
-                let C = Math.floor(Math.random() * 2) + 2; 
-                let E = Math.floor(Math.random() * 2) + 1;
-                
-                // 確保 m1*A - m2*C - m3*E < 0 以觸發最終除以負數變號
-                while (m1 * A - m2 * C - m3 * E >= 0) {
-                    C++;
-                }
+            } else if (type === 3) {
+                // T4 三個分式不等式
+                let dSet = pick([{ d1: 2, d2: 3, d3: 4, L: 12 }, { d1: 3, d2: 4, d3: 6, L: 12 }, { d1: 2, d2: 5, d3: 10, L: 10 }]);
+                let m1 = dSet.L / dSet.d1, m2 = dSet.L / dSet.d2, m3 = dSet.L / dSet.d3;
+                let A = ri(1, 2), C = ri(2, 3), E = ri(1, 2);
+                while (m1 * A - m2 * C - m3 * E >= 0) C++;
                 let coeffX = m1 * A - m2 * C - m3 * E;
-
-                let B = Math.floor(Math.random() * 5) + 1;
-                let D = Math.floor(Math.random() * 5) + 1;
-                let F = Math.floor(Math.random() * 5) + 1;
-
-                let isPlus1 = Math.random() > 0.5;
-                let isPlus3 = Math.random() > 0.5;
-                let sign1 = isPlus1 ? "+" : "-";
-                let sign3 = isPlus3 ? "+" : "-";
-
-                let strF1 = A === 1 ? `\\frac{${v} ${sign1} ${B}}{${dSet.d1}}` : `\\frac{${A}${v} ${sign1} ${B}}{${dSet.d1}}`;
+                let B = ri(1, 5), D = ri(1, 5), F = ri(1, 5);
+                let isP1 = Math.random() > 0.5, isP3 = Math.random() > 0.5;
+                let s1 = isP1 ? '+' : '-', s3 = isP3 ? '+' : '-';
+                let strF1 = A === 1 ? `\\frac{${v} ${s1} ${B}}{${dSet.d1}}` : `\\frac{${A}${v} ${s1} ${B}}{${dSet.d1}}`;
                 let strF2 = C === 1 ? `\\frac{${v} - ${D}}{${dSet.d2}}` : `\\frac{${C}${v} - ${D}}{${dSet.d2}}`;
-                let strF3 = E === 1 ? `\\frac{${v} ${sign3} ${F}}{${dSet.d3}}` : `\\frac{${E}${v} ${sign3} ${F}}{${dSet.d3}}`;
-
-                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式：</div>
-                <div class="text-xl sm:text-2xl font-bold text-indigo-700 py-2">\\( ${strF1} - ${strF2} \\ge ${strF3} \\)</div>`;
-
-                let B_term = isPlus1 ? m1 * B : -m1 * B;
-                let D_term = m2 * D; // -m2 * (-D) = + m2 * D (負號分配！)
-                let F_term = isPlus3 ? m3 * F : -m3 * F;
-
-                // coeffX * v >= F_term - B_term - D_term
+                let strF3 = E === 1 ? `\\frac{${v} ${s3} ${F}}{${dSet.d3}}` : `\\frac{${E}${v} ${s3} ${F}}{${dSet.d3}}`;
+                let B_term = isP1 ? m1 * B : -m1 * B, D_term = m2 * D, F_term = isP3 ? m3 * F : -m3 * F;
                 let rhsConst = F_term - B_term - D_term;
-
-                let gcdVal = function(a, b) {
-                    return b === 0 ? a : gcdVal(b, a % b);
-                };
-
-                let num = rhsConst;
-                let den = coeffX;
+                let num = rhsConst, den = coeffX;
                 if (den < 0) { num = -num; den = -den; }
-                let g = Math.abs(gcdVal(num, den));
-                num = num / g;
-                den = den / g;
-
-                // 由於 den 是負數被轉正，原來的 >= 會變成 <=
+                let g = gcd(Math.abs(num), Math.abs(den)) || 1; num /= g; den /= g;
                 let ansStr = den === 1 ? `${num}` : `\\frac{${num}}{${den}}`;
-
-                // 干擾項計算：忘記分配負號給 -D，即變成 -m2 * D
-                let wrongD_term = -m2 * D;
-                let wrongRhsConst = F_term - B_term - wrongD_term;
-                let wNum = wrongRhsConst;
-                let wDen = coeffX;
-                if (wDen < 0) { wNum = -wNum; wDen = -wDen; }
-                let wg = Math.abs(gcdVal(wNum, wDen));
-                wNum = wNum / wg;
-                wDen = wDen / wg;
-                let wAnsStr = wDen === 1 ? `${wNum}` : `\\frac{${wNum}}{${wDen}}`;
-
+                let wrongRhs = F_term - B_term - (-m2 * D), wNum = wrongRhs, wDen = coeffX;
+                if (wDen < 0) { wNum = -wNum; wDen = -wDen; } let wg = gcd(Math.abs(wNum), Math.abs(wDen)) || 1; wNum /= wg; wDen /= wg;
+                let wAns = wDen === 1 ? `${wNum}` : `\\frac{${wNum}}{${wDen}}`;
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">解不等式：</div><div class="text-xl font-bold text-indigo-700 py-2">\\( ${strF1} - ${strF2} \\ge ${strF3} \\)</div>`;
                 steps = [
-                    { text: `兩邊同乘以分母的最小公倍數 ${dSet.L}：`, hide: false },
-                    { text: `\\( ${m1}(${A===1?'':A}${v} ${sign1} ${B}) - ${m2}(${C===1?'':C}${v} - ${D}) \\ge ${m3}(${E===1?'':E}${v} ${sign3} ${F}) \\)`, hide: true },
-                    { text: `展開括號（<b>注意：負號分配給 -${D} 會變正數！</b>）：`, hide: true },
-                    { text: `\\( ${m1*A}${v} ${isPlus1?'+':'-'} ${Math.abs(B_term)} - ${m2*C}${v} + ${m2*D} \\ge ${m3*E}${v} ${isPlus3?'+':'-'} ${Math.abs(F_term)} \\)`, hide: true },
-                    { text: `移項：\\( (${m1*A} - ${m2*C} - ${m3*E})${v} \\ge ${F_term} ${B_term>0?'-':'+'} ${Math.abs(B_term)} - ${m2*D} \\)`, hide: true },
-                    { text: `化簡得：\\( ${coeffX}${v} \\ge ${rhsConst} \\)`, hide: true },
-                    { text: `兩邊同除以負數 ${coeffX}，<b>不等號必須轉向</b>：\\( ${v} \\le ${ansStr} \\)。`, hide: false }
+                    { text: `兩邊同乘最小公倍數 ${dSet.L}，展開（注意 \\(-(${C === 1 ? '' : C}${v}-${D})\\) 的負號分配）。`, hide: false },
+                    { text: `化簡：\\( ${coeffX}${v} \\ge ${rhsConst} \\)`, hide: false },
+                    { text: `同除以負數 ${coeffX}，<b>轉向</b>：\\( ${v} \\le ${ansStr} \\)`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${v} \\le ${ansStr}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${v} \\ge ${ansStr}`), isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
+                    { text: W(`${v} \\le ${wAns}`), isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) },
+                    { text: W(`${v} \\ge ${wAns}`), isCorrect: false, hint: _siWrapHint(msgIneqFrac, _siBuildEq(steps)) }
                 ];
 
-                options = [
-                    { text: `\\( ${v} \\le ${ansStr} \\)`, isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${ansStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\le ${wAnsStr} \\)`, isCorrect: false, hint: _siWrapHint(msgIneqFrac + "<div class='text-sm text-slate-500'>提示：展開括號時，- (Cx - D) 後面常數項應為 + D。</div>", _siBuildEq(steps)) },
-                    { text: `\\( ${v} \\ge ${wAnsStr} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign + "<br>" + msgIneqFrac, _siBuildEq(steps)) }
+            } else {
+                // T5 生活應用：預算最多件數
+                let p = pick([7, 8, 12, 15, 18, 24, 35]), nMax = ri(5, 15), M = p * nMax + ri(1, p - 1);
+                let ans = Math.floor(M / p);
+                qObj.question = `<div class="mb-4 text-base sm:text-lg text-slate-600">${pick(['小明', '小麗', '志強'])}有 \\( \\$${M} \\)。若每件物品售價為 \\( \\$${p} \\)，他最多可購買多少件物品？</div>`;
+                steps = [
+                    { text: `設購買 \\( ${v} \\) 件：\\( ${p}${v} \\le ${M} \\)`, hide: false },
+                    { text: `同除以 ${p}：\\( ${v} \\le ${fr(M, p)} \\)`, hide: false },
+                    { text: `最多可購買 ${ans} 件。`, hide: false }
+                ];
+                opts = [
+                    { text: W(`${ans}`), isCorrect: true, hint: _siWrapHint(msgCorrect, _siBuildEq(steps)) },
+                    { text: W(`${ans + 1}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${Math.ceil(M / p)}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) },
+                    { text: W(`${ans - 1}`), isCorrect: false, hint: _siWrapHint(msgIneqInt, _siBuildEq(steps)) }
                 ];
             }
         }
 
-        options = [...new Map(options.map(item => [item.text, item])).values()];
-        while(options.length < 4) {
-            options.push({ text: `\\( x > ${options.length * 5} \\)`, isCorrect: false, hint: _siWrapHint(msgSimpleIneqSign, _siBuildEq(steps)) });
-        }
-        qObj.options = _siShuffle(options).map((opt, idx) => ({
-            ...opt,
-            id: String.fromCharCode(65 + idx)
-        }));
-
+        finalize(qObj, opts, steps);
         bank.push(qObj);
     }
     return bank;
